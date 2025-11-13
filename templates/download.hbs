@@ -2,7 +2,9 @@
   <!-- Map Info -->
   <div class="dlc-download-header">
     <div class="dlc-download-map-info">
-      <img src="{{map.thumbnail}}" alt="{{map.name}}" class="dlc-download-thumbnail" />
+      {{#if map.thumbnail}}
+        <img src="{{map.thumbnail}}" alt="{{map.name}}" class="dlc-download-thumbnail" />
+      {{/if}}
       <div>
         <h3>{{map.name}}</h3>
         <p class="dlc-download-path">
@@ -12,17 +14,29 @@
     </div>
   </div>
 
-  <!-- File List / Progress -->
+  <!-- Download Progress -->
   <div class="dlc-download-content">
-    {{#if downloading}}
+    {{#if completed}}
+      <!-- Completion Status -->
+      <div class="dlc-download-complete">
+        <i class="fas fa-check-circle"></i>
+        <h3>Download Complete!</h3>
+        <p>
+          Successfully downloaded {{progress.completedFiles}} file{{#if (gt progress.completedFiles 1)}}s{{/if}}
+          {{#if progress.failedFiles}}
+            with {{progress.failedFiles}} error{{#if (gt progress.failedFiles 1)}}s{{/if}}
+          {{/if}}
+        </p>
+      </div>
+    {{else}}
       <!-- Download Progress -->
       <div class="dlc-download-progress">
-        <h4>Downloading Files...</h4>
+        <h4>Downloading {{map.name}}...</h4>
 
         <div class="dlc-progress-stats">
-          <span><i class="fas fa-check-circle"></i> Completed: {{progress.completedFiles}}/{{progress.totalFiles}}</span>
+          <span><i class="fas fa-check-circle"></i> {{progress.completedFiles}}/{{progress.totalFiles}} files</span>
           {{#if progress.failedFiles}}
-            <span class="dlc-error"><i class="fas fa-exclamation-circle"></i> Failed: {{progress.failedFiles}}</span>
+            <span class="dlc-error"><i class="fas fa-exclamation-circle"></i> {{progress.failedFiles}} failed</span>
           {{/if}}
         </div>
 
@@ -36,53 +50,18 @@
           </p>
         {{/if}}
       </div>
-    {{else if completed}}
-      <!-- Completion Status -->
-      <div class="dlc-download-complete">
-        <i class="fas fa-check-circle"></i>
-        <h3>Download Complete!</h3>
-        <p>
-          Successfully downloaded {{progress.completedFiles}} file{{#if (gt progress.completedFiles 1)}}s{{/if}}
-          {{#if progress.failedFiles}}
-            with {{progress.failedFiles}} error{{#if (gt progress.failedFiles 1)}}s{{/if}}
-          {{/if}}
-        </p>
-      </div>
-    {{else}}
-      <!-- File List -->
-      <div class="dlc-file-list">
-        <h4>Files to Download ({{files.length}})</h4>
-        <div class="dlc-file-list-scroll">
-          {{#each files}}
-            <div class="dlc-file-item">
-              <i class="fas {{#if (eq this.type "scene")}}fa-image{{else if (eq this.type "asset")}}fa-file-image{{else}}fa-file{{/if}}"></i>
-              <span class="dlc-file-path">{{this.path}}</span>
-              {{#if this.size}}
-                <span class="dlc-file-size">{{formatBytes this.size}}</span>
-              {{/if}}
-            </div>
-          {{/each}}
-        </div>
-      </div>
     {{/if}}
   </div>
 
   <!-- Actions -->
   <footer class="dlc-download-footer">
-    {{#if downloading}}
-      <button type="button" data-action="cancelDownload" class="dlc-btn dlc-btn-danger">
-        <i class="fas fa-times"></i> Cancel
-      </button>
-    {{else if completed}}
+    {{#if completed}}
       <button type="button" data-action="close" class="dlc-btn dlc-btn-primary">
         <i class="fas fa-check"></i> Close
       </button>
-    {{else}}
-      <button type="button" data-action="close" class="dlc-btn dlc-btn-secondary">
+    {{else if downloading}}
+      <button type="button" data-action="cancelDownload" class="dlc-btn dlc-btn-danger">
         <i class="fas fa-times"></i> Cancel
-      </button>
-      <button type="button" data-action="startDownload" class="dlc-btn dlc-btn-primary" {{#unless hasFiles}}disabled{{/unless}}>
-        <i class="fas fa-download"></i> Start Download
       </button>
     {{/if}}
   </footer>

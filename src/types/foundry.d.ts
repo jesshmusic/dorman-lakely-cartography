@@ -55,9 +55,9 @@ declare global {
   }
 
   interface HooksAPI {
-    on(hook: string, fn: Function): number;
-    once(hook: string, fn: Function): number;
-    off(hook: string, fn: number | Function): void;
+    on(hook: string, fn: (...args: any[]) => void): number;
+    once(hook: string, fn: (...args: any[]) => void): number;
+    off(hook: string, fn: number | ((...args: any[]) => void)): void;
     call(hook: string, ...args: any[]): boolean;
     callAll(hook: string, ...args: any[]): void;
   }
@@ -145,7 +145,7 @@ declare global {
       resizable?: boolean;
       positioned?: boolean;
     };
-    actions?: Record<string, Function>;
+    actions?: Record<string, (event: Event, target: HTMLElement) => void>;
     position?: Partial<ApplicationPosition>;
     [key: string]: any;
   }
@@ -167,12 +167,7 @@ declare global {
 
   class FilePicker {
     static browse(source: string, target: string, options?: any): Promise<any>;
-    static upload(
-      source: string,
-      path: string,
-      file: File | Blob,
-      options?: any
-    ): Promise<any>;
+    static upload(source: string, path: string, file: File | Blob, options?: any): Promise<any>;
   }
 
   function renderTemplate(path: string, data: any): Promise<string>;

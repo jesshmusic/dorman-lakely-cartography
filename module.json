@@ -2,7 +2,7 @@
   "id": "dorman-lakely-cartography",
   "title": "Dorman Lakely Cartography",
   "description": "A FoundryVTT module for downloading and managing Dorman Lakely custom battlemaps with Patreon integration.",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "authors": [
     {
       "name": "Dorman Lakely",
@@ -13,26 +13,6 @@
     "minimum": "13",
     "verified": "13",
     "maximum": "13"
-  },
-  "relationships": {
-    "requires": [
-      {
-        "id": "tagger",
-        "type": "module",
-        "manifest": "https://github.com/fantasycalendar/FoundryVTT-Tagger/releases/latest/download/module.json",
-        "compatibility": {
-          "minimum": "1.0.0"
-        }
-      },
-      {
-        "id": "monks-active-tiles",
-        "type": "module",
-        "manifest": "https://github.com/ironmonk88/monks-active-tiles/releases/latest/download/module.json",
-        "compatibility": {
-          "minimum": "1.0.0"
-        }
-      }
-    ]
   },
   "esmodules": [
     "dist/main.js"
@@ -67,11 +47,11 @@
       "packs": ["maps"]
     }
   ],
-  "url": "https://github.com/YOUR_USERNAME/dorman-lakely-cartography",
-  "manifest": "https://raw.githubusercontent.com/YOUR_USERNAME/dorman-lakely-cartography/main/module.json",
-  "download": "https://github.com/YOUR_USERNAME/dorman-lakely-cartography/releases/download/v0.1.0/module.zip",
+  "url": "https://github.com/jesshmusic/dorman-lakely-cartography",
+  "manifest": "https://raw.githubusercontent.com/jesshmusic/dorman-lakely-cartography/main/module.json",
+  "download": "https://github.com/jesshmusic/dorman-lakely-cartography/releases/download/v0.1.0/module.zip",
   "license": "LICENSE",
   "readme": "README.md",
-  "bugs": "https://github.com/YOUR_USERNAME/dorman-lakely-cartography/issues",
-  "changelog": "https://github.com/YOUR_USERNAME/dorman-lakely-cartography/blob/main/CHANGELOG.md"
+  "bugs": "https://github.com/jesshmusic/dorman-lakely-cartography/issues",
+  "changelog": "https://github.com/jesshmusic/dorman-lakely-cartography/blob/main/CHANGELOG.md"
 }

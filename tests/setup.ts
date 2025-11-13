@@ -3,8 +3,10 @@
  * Runs before all tests to set up global mocks and utilities
  */
 
+import { jest } from '@jest/globals';
+
 // Mock global Foundry API
-global.game = {
+(global as any).game = {
   modules: new Map(),
   settings: {
     register: jest.fn(),
@@ -37,7 +39,7 @@ global.game = {
   }
 } as any;
 
-global.ui = {
+(global as any).ui = {
   notifications: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -46,7 +48,7 @@ global.ui = {
   }
 } as any;
 
-global.Hooks = {
+(global as any).Hooks = {
   on: jest.fn(),
   once: jest.fn(),
   off: jest.fn(),
@@ -54,10 +56,10 @@ global.Hooks = {
   callAll: jest.fn()
 } as any;
 
-global.foundry = {
+(global as any).foundry = {
   utils: {
     randomID: jest.fn(() => 'mock-random-id-12345'),
-    mergeObject: jest.fn((original, other) => ({ ...original, ...other }))
+    mergeObject: jest.fn((original: any, other: any) => ({ ...original, ...other }))
   },
   applications: {
     api: {
@@ -73,12 +75,12 @@ global.foundry = {
   }
 } as any;
 
-global.FilePicker = {
-  browse: jest.fn().mockResolvedValue({ files: [] }),
-  upload: jest.fn().mockResolvedValue({})
+(global as any).FilePicker = {
+  browse: jest.fn<any>().mockResolvedValue({ files: [] }),
+  upload: jest.fn<any>().mockResolvedValue({})
 } as any;
 
-global.renderTemplate = jest.fn().mockResolvedValue('<div>Mock Template</div>');
+(global as any).renderTemplate = jest.fn<any>().mockResolvedValue('<div>Mock Template</div>');
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -103,7 +105,7 @@ Object.defineProperty(global, 'localStorage', {
 });
 
 // Mock fetch
-global.fetch = jest.fn();
+(global as any).fetch = jest.fn();
 
 // Mock window
 Object.defineProperty(global, 'window', {

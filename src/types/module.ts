@@ -10,6 +10,7 @@ export interface DLCMap {
   tags: string[];
   keywords?: string[];
   access: 'Free' | 'Premium';
+  requiredTier?: string; // Required tier name (e.g., 'free', 'Apprentice', 'Wizard')
   gridSize?: number;
   gridUnits?: string;
   resolution?: {
@@ -30,13 +31,25 @@ export interface DLCUser {
   userId: string;
   has_free: boolean;
   has_premium: boolean;
+  tier_name: string; // Patreon tier name (e.g., 'Free', 'Apprentice', 'Wizard')
   expires_in?: number;
 }
 
+export type DLCFileType =
+  | 'scene' // Scene JSON file
+  | 'background' // Background/map image
+  | 'tile' // Tile images
+  | 'token' // Token images
+  | 'audio' // Sound effects/music
+  | 'thumbnail' // Preview thumbnail
+  | 'other'; // Other assets
+
 export interface DLCFile {
   path: string;
+  name?: string; // Optional: clean filename from backend
+  file_name?: string; // Optional: backend compatibility
   size: number;
-  type: 'scene' | 'asset' | 'thumbnail' | 'other';
+  type: DLCFileType;
   checksum?: string;
 }
 

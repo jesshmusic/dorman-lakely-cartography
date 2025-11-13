@@ -9,7 +9,7 @@ import { FileUploadService } from './file-upload-service';
 
 interface DownloadCallbacks {
   onProgress?: (progress: DownloadProgress) => void;
-  onFileComplete?: (file: DLCFile, status: DownloadStatus) => void;
+  onFileComplete?: (file: DLCFile, status: DownloadStatus, blob?: Blob) => void;
   onComplete?: (results: DownloadResult[]) => void;
   onError?: (error: Error) => void;
 }
@@ -55,7 +55,12 @@ export class ConcurrentDownloadManager {
   /**
    * Process download queue for a specific map
    */
-  async process(mapId: string, files: DLCFile[], remappedPaths?: Map<string, string>): Promise<DownloadResult[]> {
+  async process(
+    mapId: string,
+    files: DLCFile[],
+    remappedPaths?: Map<string, string>,
+    isFreeMap: boolean = false
+  ): Promise<DownloadResult[]> {
     this.queue = [];
     this.activeDownloads.clear();
     this.results = [];
@@ -79,7 +84,7 @@ export class ConcurrentDownloadManager {
     try {
       // Start initial workers
       for (let i = 0; i < Math.min(this.concurrency, this.queue.length); i++) {
-        this.startWorker(mapId);
+        this.startWorker(mapId, isFreeMap);
       }
 
       // Wait for all downloads to complete
@@ -103,8 +108,8 @@ export class ConcurrentDownloadManager {
   /**
    * Start a download worker
    */
-  private async startWorker(mapId: string): Promise<void> {
-    const workerPromise = this.worker(mapId);
+  private async startWorker(mapId: string, isFreeMap: boolean): Promise<void> {
+    const workerPromise = this.worker(mapId, isFreeMap);
     this.activeDownloads.add(workerPromise);
 
     try {
@@ -117,13 +122,13 @@ export class ConcurrentDownloadManager {
   /**
    * Worker function that processes queue items
    */
-  private async worker(mapId: string): Promise<void> {
+  private async worker(mapId: string, isFreeMap: boolean): Promise<void> {
     while (!this.aborted && this.queue.length > 0) {
       const item = this.queue.shift();
       if (!item) break;
 
       try {
-        await this.downloadFile(mapId, item);
+        await this.downloadFile(mapId, item, isFreeMap);
       } catch (error) {
         console.error('Dorman Lakely Cartography | Worker error:', error);
       }
@@ -133,38 +138,54 @@ export class ConcurrentDownloadManager {
   /**
    * Download a single file
    */
-  private async downloadFile(mapId: string, item: DownloadQueueItem): Promise<void> {
+  private async downloadFile(
+    mapId: string,
+    item: DownloadQueueItem,
+    isFreeMap: boolean
+  ): Promise<void> {
     const { file, remappedPath } = item;
 
     try {
       // Update status
       item.status = DownloadStatus.Downloading;
-      this.reportProgress(file.path);
+
+      // Use file_name from backend if available, otherwise extract from path
+      const displayName = file.file_name || file.name || file.path.split('/').pop() || file.path;
+      this.reportProgress(displayName);
 
       // Check if file already exists
+      console.log(`Dorman Lakely Cartography | Checking if file exists: ${remappedPath}`);
       const exists = await this.fileService.fileExists(remappedPath);
       if (exists) {
-        console.log(`Dorman Lakely Cartography | File already exists, skipping: ${remappedPath}`);
+        console.log(
+          `Dorman Lakely Cartography | ⏭️  File already exists, skipping: ${remappedPath}`
+        );
         item.status = DownloadStatus.Completed;
         this.recordResult(file, DownloadStatus.Completed);
         return;
       }
 
       // Download file from API
-      const blob = await this.apiService.downloadFile(mapId, file.path);
+      console.log(`Dorman Lakely Cartography | 📥 Downloading file from API: ${file.path}`);
+      const blob = await this.apiService.downloadFile(mapId, file.path, isFreeMap);
+      console.log(
+        `Dorman Lakely Cartography | ✓ Downloaded blob: ${blob.size} bytes, type: ${blob.type}`
+      );
 
       // Update status
       item.status = DownloadStatus.Processing;
 
-      // Upload to Foundry storage
+      // Upload to Foundry storage (will skip scene.json automatically)
+      console.log(`Dorman Lakely Cartography | 📤 Uploading to Foundry storage: ${remappedPath}`);
       await this.fileService.uploadFile(blob, remappedPath);
+      console.log(`Dorman Lakely Cartography | ✓ Upload complete: ${remappedPath}`);
 
       // Mark as completed
       item.status = DownloadStatus.Completed;
       this.recordResult(file, DownloadStatus.Completed);
 
       if (this.callbacks.onFileComplete) {
-        this.callbacks.onFileComplete(file, DownloadStatus.Completed);
+        this.callbacks.onFileComplete(file, DownloadStatus.Completed, blob);
       }
     } catch (error) {
       console.error(`Dorman Lakely Cartography | Error downloading ${file.path}:`, error);
@@ -175,7 +196,7 @@ export class ConcurrentDownloadManager {
       this.recordResult(file, DownloadStatus.Error, item.error);
 
       if (this.callbacks.onFileComplete) {
-        this.callbacks.onFileComplete(file, DownloadStatus.Error);
+        this.callbacks.onFileComplete(file, DownloadStatus.Error, undefined);
       }
     }
   }
