@@ -3,7 +3,7 @@
  * A FoundryVTT module for downloading and managing custom battlemaps
  */
 
-import { DLCSettings, DLCAPIConfig } from './types/module';
+import { DLCAPIConfig } from './types/module';
 import { MapGalleryDialog } from './ui/map-gallery-dialog';
 import { MODULE_ID, MODULE_TITLE, LOG_PREFIX } from './constants';
 import { SceneExporter } from './services/scene-exporter';
@@ -13,37 +13,37 @@ import { SceneExporter } from './services/scene-exporter';
  */
 function registerHandlebarsHelpers(): void {
   // Helper: Check if array includes a value
-  Handlebars.registerHelper('includes', function(array: any[], value: any) {
+  Handlebars.registerHelper('includes', function (array: any[], value: any) {
     if (!Array.isArray(array)) return false;
     return array.includes(value);
   });
 
   // Helper: Check equality
-  Handlebars.registerHelper('eq', function(a: any, b: any) {
+  Handlebars.registerHelper('eq', function (a: any, b: any) {
     return a === b;
   });
 
   // Helper: Logical AND
-  Handlebars.registerHelper('and', function(...args: any[]) {
+  Handlebars.registerHelper('and', function (...args: any[]) {
     // Remove the last argument which is the Handlebars options object
     const values = args.slice(0, -1);
     return values.every(v => !!v);
   });
 
   // Helper: Logical OR
-  Handlebars.registerHelper('or', function(...args: any[]) {
+  Handlebars.registerHelper('or', function (...args: any[]) {
     // Remove the last argument which is the Handlebars options object
     const values = args.slice(0, -1);
     return values.some(v => !!v);
   });
 
   // Helper: Logical NOT
-  Handlebars.registerHelper('not', function(value: any) {
+  Handlebars.registerHelper('not', function (value: any) {
     return !value;
   });
 
   // Helper: Format bytes to human-readable size
-  Handlebars.registerHelper('formatBytes', function(bytes: number) {
+  Handlebars.registerHelper('formatBytes', function (bytes: number) {
     if (!bytes || bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -52,22 +52,22 @@ function registerHandlebarsHelpers(): void {
   });
 
   // Helper: Multiply two numbers
-  Handlebars.registerHelper('multiply', function(a: number, b: number) {
+  Handlebars.registerHelper('multiply', function (a: number, b: number) {
     return a * b;
   });
 
   // Helper: Divide two numbers
-  Handlebars.registerHelper('divide', function(a: number, b: number) {
+  Handlebars.registerHelper('divide', function (a: number, b: number) {
     return b !== 0 ? a / b : 0;
   });
 
   // Helper: Greater than comparison
-  Handlebars.registerHelper('gt', function(a: number, b: number) {
+  Handlebars.registerHelper('gt', function (a: number, b: number) {
     return a > b;
   });
 
   // Helper: Convert string to lowercase
-  Handlebars.registerHelper('lowercase', function(str: string) {
+  Handlebars.registerHelper('lowercase', function (str: string) {
     return typeof str === 'string' ? str.toLowerCase() : str;
   });
 }
@@ -106,7 +106,8 @@ function registerSettings(): void {
     default: {
       baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
       patreonClientId: import.meta.env.VITE_PATREON_CLIENT_ID || 'YOUR_PATREON_CLIENT_ID',
-      patreonRedirectUri: import.meta.env.VITE_PATREON_REDIRECT_URI || 'http://localhost:3000/v1/patreon/callback'
+      patreonRedirectUri:
+        import.meta.env.VITE_PATREON_REDIRECT_URI || 'http://localhost:3000/v1/patreon/callback'
     } as DLCAPIConfig
   });
 
@@ -148,9 +149,9 @@ function registerSettings(): void {
       max: 168,
       step: 1
     },
-    onChange: value => {
-      // Convert hours to milliseconds
-      const ms = value * 60 * 60 * 1000;
+    onChange: _value => {
+      // Convert hours to milliseconds - value is converted but not used
+      // The conversion happens automatically when the setting is read
     }
   });
 }
@@ -170,17 +171,13 @@ Hooks.once('init', async () => {
       const buildInfo = await response.json();
       buildNumber = buildInfo.buildNumber;
     }
-  } catch (e) {
+  } catch {
     // Ignore build info errors
   }
 
   // Module initialization banner with colored output
   console.log(
-    "%c⚔️ Dorman Lakely Cartography %cv" +
-      version +
-      ' %c(build ' +
-      buildNumber +
-      ')',
+    '%c⚔️ Dorman Lakely Cartography %cv' + version + ' %c(build ' + buildNumber + ')',
     'color: #d32f2f; font-weight: bold; font-size: 16px;',
     'color: #ff9800; font-weight: bold; font-size: 14px;',
     'color: #ffeb3b; font-weight: normal; font-size: 12px;'
@@ -216,16 +213,14 @@ Hooks.once('init', async () => {
  */
 Hooks.once('ready', async () => {
   console.log(
-    "%c⚔️ Dorman Lakely Cartography %c✓ Ready!",
+    '%c⚔️ Dorman Lakely Cartography %c✓ Ready!',
     'color: #d32f2f; font-weight: bold; font-size: 16px;',
     'color: #4caf50; font-weight: bold; font-size: 14px;'
   );
 
   // Check for required modules
   const requiredModules = ['tagger', 'monks-active-tiles'];
-  const missingModules = requiredModules.filter(
-    moduleId => !game.modules.get(moduleId)?.active
-  );
+  const missingModules = requiredModules.filter(moduleId => !game.modules.get(moduleId)?.active);
 
   if (missingModules.length > 0) {
     ui.notifications.warn(
@@ -282,12 +277,11 @@ Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
  * Foundry v13 uses _getEntryContextOptions method instead of hooks
  */
 Hooks.once('init', () => {
-
   // Wrap the SceneDirectory prototype method
   const SceneDirectory = CONFIG.ui.scenes;
   const originalGetEntryContextOptions = SceneDirectory.prototype._getEntryContextOptions;
 
-  SceneDirectory.prototype._getEntryContextOptions = function() {
+  SceneDirectory.prototype._getEntryContextOptions = function () {
     const options = originalGetEntryContextOptions.call(this);
 
     // Only add for GMs

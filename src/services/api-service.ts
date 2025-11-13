@@ -178,7 +178,9 @@ export class APIService {
             // Fetch the actual file from the signed URL
             const fileResponse = await fetch(data.url);
             if (!fileResponse.ok) {
-              throw new Error(`Failed to download file from storage: ${fileResponse.status} ${fileResponse.statusText}`);
+              throw new Error(
+                `Failed to download file from storage: ${fileResponse.status} ${fileResponse.statusText}`
+              );
             }
             return await fileResponse.blob();
           }

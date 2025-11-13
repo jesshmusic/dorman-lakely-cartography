@@ -55,7 +55,12 @@ export class ConcurrentDownloadManager {
   /**
    * Process download queue for a specific map
    */
-  async process(mapId: string, files: DLCFile[], remappedPaths?: Map<string, string>, isFreeMap: boolean = false): Promise<DownloadResult[]> {
+  async process(
+    mapId: string,
+    files: DLCFile[],
+    remappedPaths?: Map<string, string>,
+    isFreeMap: boolean = false
+  ): Promise<DownloadResult[]> {
     this.queue = [];
     this.activeDownloads.clear();
     this.results = [];
@@ -133,7 +138,11 @@ export class ConcurrentDownloadManager {
   /**
    * Download a single file
    */
-  private async downloadFile(mapId: string, item: DownloadQueueItem, isFreeMap: boolean): Promise<void> {
+  private async downloadFile(
+    mapId: string,
+    item: DownloadQueueItem,
+    isFreeMap: boolean
+  ): Promise<void> {
     const { file, remappedPath } = item;
 
     try {
@@ -148,7 +157,9 @@ export class ConcurrentDownloadManager {
       console.log(`Dorman Lakely Cartography | Checking if file exists: ${remappedPath}`);
       const exists = await this.fileService.fileExists(remappedPath);
       if (exists) {
-        console.log(`Dorman Lakely Cartography | ⏭️  File already exists, skipping: ${remappedPath}`);
+        console.log(
+          `Dorman Lakely Cartography | ⏭️  File already exists, skipping: ${remappedPath}`
+        );
         item.status = DownloadStatus.Completed;
         this.recordResult(file, DownloadStatus.Completed);
         return;
@@ -157,7 +168,9 @@ export class ConcurrentDownloadManager {
       // Download file from API
       console.log(`Dorman Lakely Cartography | 📥 Downloading file from API: ${file.path}`);
       const blob = await this.apiService.downloadFile(mapId, file.path, isFreeMap);
-      console.log(`Dorman Lakely Cartography | ✓ Downloaded blob: ${blob.size} bytes, type: ${blob.type}`);
+      console.log(
+        `Dorman Lakely Cartography | ✓ Downloaded blob: ${blob.size} bytes, type: ${blob.type}`
+      );
 
       // Update status
       item.status = DownloadStatus.Processing;

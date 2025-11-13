@@ -217,7 +217,9 @@ export class MapGalleryDialog extends foundry.applications.api.HandlebarsApplica
       }
 
       if (!this.authService.hasPremiumAccess()) {
-        ui.notifications.error('This map requires Premium access. Please upgrade your Patreon tier.');
+        ui.notifications.error(
+          'This map requires Premium access. Please upgrade your Patreon tier.'
+        );
         return;
       }
     }

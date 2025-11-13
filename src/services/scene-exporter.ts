@@ -1,4 +1,4 @@
-import { MODULE_ID, MODULE_TITLE, LOG_PREFIX } from '../constants';
+import { LOG_PREFIX } from '../constants';
 import JSZip from 'jszip';
 
 /**
@@ -74,7 +74,7 @@ export class SceneExporter {
           }
 
           const blob = await response.blob();
-          let filename = assetPath.split('/').pop() || 'unknown';
+          const filename = assetPath.split('/').pop() || 'unknown';
 
           // Replace spaces with underscores in filename
           const cleanFilename = filename.replace(/\s+/g, '_');
@@ -158,7 +158,9 @@ export class SceneExporter {
       console.log(`${LOG_PREFIX} | 3. Create/edit a map and upload the ZIP`);
     } catch (error) {
       console.error(`${LOG_PREFIX} | Export failed:`, error);
-      ui.notifications?.error(`Failed to export scene: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      ui.notifications?.error(
+        `Failed to export scene: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 

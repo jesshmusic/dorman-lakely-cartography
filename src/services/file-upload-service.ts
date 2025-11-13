@@ -17,7 +17,9 @@ export class FileUploadService {
       // Skip scene.json - it will be used in-memory only
       const fileName = targetPath.split('/').pop() || 'file';
       if (fileName === 'scene.json') {
-        console.log(`Dorman Lakely Cartography | ⏭️  Skipping scene.json upload (will be used in-memory)`);
+        console.log(
+          `Dorman Lakely Cartography | ⏭️  Skipping scene.json upload (will be used in-memory)`
+        );
         return;
       }
 
@@ -69,7 +71,7 @@ export class FileUploadService {
       }
 
       return false;
-    } catch (error) {
+    } catch {
       // If browse fails, assume file doesn't exist
       return false;
     }
@@ -80,11 +82,11 @@ export class FileUploadService {
    */
   async disableMediaOptimizer(): Promise<void> {
     try {
-      // @ts-ignore - Accessing Foundry's media optimizer setting
+      // @ts-expect-error - Accessing Foundry's media optimizer setting
       const currentSetting = game.settings.get('core', 'noCanvas');
       this.mediaOptimizerOriginalState = currentSetting;
 
-      // @ts-ignore
+      // @ts-expect-error - Accessing Foundry's media optimizer setting
       await game.settings.set('core', 'noCanvas', true);
 
       console.log('Dorman Lakely Cartography | Media optimizer disabled');
@@ -99,7 +101,7 @@ export class FileUploadService {
   async enableMediaOptimizer(): Promise<void> {
     try {
       if (this.mediaOptimizerOriginalState !== null) {
-        // @ts-ignore
+        // @ts-expect-error - Accessing Foundry's media optimizer setting
         await game.settings.set('core', 'noCanvas', this.mediaOptimizerOriginalState);
         this.mediaOptimizerOriginalState = null;
 
@@ -134,7 +136,7 @@ export class FileUploadService {
       const FilePicker = foundry.applications.apps.FilePicker;
       await FilePicker.browse(source, directoryPath);
       console.log(`Dorman Lakely Cartography | Directory exists: ${directoryPath}`);
-    } catch (error) {
+    } catch {
       // Directory doesn't exist, create it recursively
       console.log(`Dorman Lakely Cartography | Creating directory: ${directoryPath}`);
       await this.createFolderRecursive(directoryPath, source);
@@ -162,13 +164,19 @@ export class FileUploadService {
           if (error?.message?.includes('EEXIST') || error?.message?.includes('exists')) {
             console.log(`Dorman Lakely Cartography | Directory already exists: ${currentPath}`);
           } else {
-            console.warn(`Dorman Lakely Cartography | Could not create directory ${currentPath}:`, error);
+            console.warn(
+              `Dorman Lakely Cartography | Could not create directory ${currentPath}:`,
+              error
+            );
             // Continue trying to create remaining directories
           }
         }
       }
     } catch (error) {
-      console.error(`Dorman Lakely Cartography | Failed to create folder structure for ${path}:`, error);
+      console.error(
+        `Dorman Lakely Cartography | Failed to create folder structure for ${path}:`,
+        error
+      );
       throw error;
     }
   }

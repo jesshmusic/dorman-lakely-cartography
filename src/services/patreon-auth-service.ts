@@ -68,9 +68,7 @@ export class PatreonAuthService {
           game.dlcMaps.user = userData;
         }
 
-        ui.notifications.info(
-          `Successfully authenticated! Access level: ${userData.tier_name}`
-        );
+        ui.notifications.info(`Successfully authenticated! Access level: ${userData.tier_name}`);
 
         return userData;
       } else {
@@ -89,7 +87,7 @@ export class PatreonAuthService {
    * Poll API for authentication completion
    * Checks every 2 seconds for up to 2 minutes
    */
-  private async pollForAuthentication(userId: string): Promise<DLCUser | null> {
+  private async pollForAuthentication(_userId: string): Promise<DLCUser | null> {
     const maxAttempts = 60; // 2 minutes (60 * 2 seconds)
     const pollInterval = 2000; // 2 seconds
 

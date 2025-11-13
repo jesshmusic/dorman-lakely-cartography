@@ -2,6 +2,7 @@
  * API Service Tests
  */
 
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { APIService } from '../../src/services/api-service';
 import { DLCAPIConfig } from '../../src/types/module';
 
@@ -23,7 +24,7 @@ describe('APIService', () => {
     apiService = new APIService(mockConfig, 'test-user-id');
 
     // Reset fetch mock
-    (global.fetch as jest.Mock).mockClear();
+    (global.fetch as any).mockClear();
   });
 
   describe('fetchTags', () => {
@@ -33,7 +34,7 @@ describe('APIService', () => {
         { value: 'forest', label: 'Forest', count: 3 }
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockTags
       });
@@ -41,7 +42,7 @@ describe('APIService', () => {
       const tags = await apiService.fetchTags();
 
       expect(tags).toEqual(mockTags);
-      expect(global.fetch).toHaveBeenCalledWith('https://api.test.com/api/v1/maps/tags');
+      expect(global.fetch).toHaveBeenCalledWith('https://api.test.com/v1/maps/tags');
     });
 
     it('should use cached tags if available', async () => {
@@ -63,7 +64,7 @@ describe('APIService', () => {
     });
 
     it('should handle fetch errors gracefully', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         statusText: 'Internal Server Error'
       });
@@ -87,7 +88,7 @@ describe('APIService', () => {
         }
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockMaps
       });
@@ -95,7 +96,7 @@ describe('APIService', () => {
       const maps = await apiService.fetchMaps();
 
       expect(maps).toEqual(mockMaps);
-      expect(global.fetch).toHaveBeenCalledWith('https://api.test.com/api/v1/maps/list');
+      expect(global.fetch).toHaveBeenCalledWith('https://api.test.com/v1/maps/list');
     });
   });
 
@@ -113,7 +114,7 @@ describe('APIService', () => {
         totalSize: 1024
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockManifest
       });
@@ -122,7 +123,7 @@ describe('APIService', () => {
 
       expect(manifest).toEqual(mockManifest);
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/v1/maps/files/map-1',
+        'https://api.test.com/v1/maps/files/map-1',
         expect.objectContaining({
           headers: {
             Authorization: 'test-user-id'
@@ -140,14 +141,12 @@ describe('APIService', () => {
     });
 
     it('should throw error for 403 response', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 403
       });
 
-      await expect(apiService.fetchFileManifest('map-1')).rejects.toThrow(
-        'You do not have access'
-      );
+      await expect(apiService.fetchFileManifest('map-1')).rejects.toThrow('You do not have access');
     });
   });
 
@@ -168,7 +167,7 @@ describe('APIService', () => {
       apiService.setUserId('new-user-id');
 
       // Test by checking if fetchFileManifest uses the new ID
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ mapId: 'test', files: [], totalSize: 0 })
       });

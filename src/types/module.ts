@@ -36,18 +36,18 @@ export interface DLCUser {
 }
 
 export type DLCFileType =
-  | 'scene'           // Scene JSON file
-  | 'background'      // Background/map image
-  | 'tile'            // Tile images
-  | 'token'           // Token images
-  | 'audio'           // Sound effects/music
-  | 'thumbnail'       // Preview thumbnail
-  | 'other';          // Other assets
+  | 'scene' // Scene JSON file
+  | 'background' // Background/map image
+  | 'tile' // Tile images
+  | 'token' // Token images
+  | 'audio' // Sound effects/music
+  | 'thumbnail' // Preview thumbnail
+  | 'other'; // Other assets
 
 export interface DLCFile {
   path: string;
-  name?: string;          // Optional: clean filename from backend
-  file_name?: string;     // Optional: backend compatibility
+  name?: string; // Optional: clean filename from backend
+  file_name?: string; // Optional: backend compatibility
   size: number;
   type: DLCFileType;
   checksum?: string;
