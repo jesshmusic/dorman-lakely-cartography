@@ -4,6 +4,7 @@
  */
 
 import { DLCMap, DLCTag, DLCFileManifest, DLCUser, DLCAPIConfig } from '../types/module';
+import { LOG_PREFIX } from '../constants';
 
 export class APIService {
   private baseUrl: string;
@@ -29,7 +30,7 @@ export class APIService {
     const cached = this.getFromCache<DLCTag[]>(cacheKey);
 
     if (cached) {
-      console.log('Dorman Lakely Cartography | Using cached tags');
+      console.log(`${LOG_PREFIX} | Using cached tags`);
       return cached;
     }
 
@@ -45,7 +46,7 @@ export class APIService {
 
       return tags;
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error fetching tags:', error);
+      console.error(`${LOG_PREFIX} | Error fetching tags:`, error);
       ui.notifications.error('Failed to fetch map tags. Using cached data if available.');
 
       // Return cached data even if expired, or empty array
@@ -61,7 +62,7 @@ export class APIService {
     const cached = this.getFromCache<DLCMap[]>(cacheKey);
 
     if (cached) {
-      console.log('Dorman Lakely Cartography | Using cached maps');
+      console.log(`${LOG_PREFIX} | Using cached maps`);
       return cached;
     }
 
@@ -77,7 +78,7 @@ export class APIService {
 
       return maps;
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error fetching maps:', error);
+      console.error(`${LOG_PREFIX} | Error fetching maps:`, error);
       ui.notifications.error('Failed to fetch map catalog. Using cached data if available.');
 
       // Return cached data even if expired, or empty array
@@ -91,7 +92,9 @@ export class APIService {
   async fetchFileManifest(mapId: string, isFreeMap: boolean = false): Promise<DLCFileManifest> {
     // Only require userId for premium maps
     if (!isFreeMap && !this.userId) {
-      throw new Error('User ID is required for fetching Premium map file manifest');
+      const errorMsg = 'User ID is required for fetching Premium map file manifest';
+      console.error(`${LOG_PREFIX} | ${errorMsg}`);
+      throw new Error(errorMsg);
     }
 
     try {
@@ -116,9 +119,10 @@ export class APIService {
         throw new Error(`Failed to fetch file manifest: ${response.statusText}`);
       }
 
-      return await response.json();
+      const manifest = await response.json();
+      return manifest;
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error fetching file manifest:', error);
+      console.error(`${LOG_PREFIX} | Error fetching file manifest:`, error);
       throw error;
     }
   }
@@ -129,7 +133,9 @@ export class APIService {
   async downloadFile(mapId: string, filePath: string, isFreeMap: boolean = false): Promise<Blob> {
     // Only require userId for premium maps
     if (!isFreeMap && !this.userId) {
-      throw new Error('User ID is required for downloading Premium map files');
+      const errorMsg = 'User ID is required for downloading Premium map files';
+      console.error(`${LOG_PREFIX} | ${errorMsg}`);
+      throw new Error(errorMsg);
     }
 
     try {
@@ -141,6 +147,8 @@ export class APIService {
       if (this.userId) {
         headers.Authorization = this.userId;
       }
+
+      console.log(`${LOG_PREFIX} | Downloading file: ${filePath} from map ${mapId}`);
 
       const response = await fetch(`${this.baseUrl}/v1/maps/file/${mapId}`, {
         method: 'POST',
@@ -176,12 +184,12 @@ export class APIService {
           }
         }
       } catch (jsonError) {
-        console.warn('Dorman Lakely Cartography | Failed to parse JSON response, treating as blob:', jsonError);
+        console.warn(`${LOG_PREFIX} | Failed to parse JSON response, treating as blob:`, jsonError);
       }
 
       return await response.blob();
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error downloading file:', error);
+      console.error(`${LOG_PREFIX} | Error downloading file:`, error);
       throw error;
     }
   }
@@ -191,11 +199,13 @@ export class APIService {
    */
   async checkUserStatus(): Promise<DLCUser | null> {
     if (!this.userId) {
+      console.warn(`${LOG_PREFIX} | No userId set for checkUserStatus`);
       return null;
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/v1/users/${this.userId}/ready`);
+      const url = `${this.baseUrl}/v1/users/${this.userId}/ready`;
+      const response = await fetch(url);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -207,7 +217,7 @@ export class APIService {
       const userData: DLCUser = await response.json();
       return userData;
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error checking user status:', error);
+      console.error(`${LOG_PREFIX} | Error checking user status:`, error);
       return null;
     }
   }
@@ -230,7 +240,7 @@ export class APIService {
 
       return data as T;
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error reading from cache:', error);
+      console.error(`${LOG_PREFIX} | Error reading from cache:`, error);
       return null;
     }
   }
@@ -246,7 +256,7 @@ export class APIService {
       };
       localStorage.setItem(key, JSON.stringify(cacheData));
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error writing to cache:', error);
+      console.error(`${LOG_PREFIX} | Error writing to cache:`, error);
     }
   }
 
@@ -257,9 +267,9 @@ export class APIService {
     try {
       localStorage.removeItem('dlc-tags');
       localStorage.removeItem('dlc-maps');
-      console.log('Dorman Lakely Cartography | Cache cleared');
+      console.log(`${LOG_PREFIX} | Cache cleared`);
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error clearing cache:', error);
+      console.error(`${LOG_PREFIX} | Error clearing cache:`, error);
     }
   }
 }

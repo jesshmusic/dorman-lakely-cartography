@@ -58,6 +58,28 @@
   gap: 0.5rem;
 }
 
+/* Tier-based badges */
+.dlc-auth-badge.tier-free {
+  background: var(--dlc-free);
+  color: #333;
+}
+
+.dlc-auth-badge.tier-apprentice {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #333;
+}
+
+.dlc-auth-badge.tier-wizard {
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  color: #fff;
+}
+
+.dlc-auth-badge.not-authenticated {
+  background: linear-gradient(135deg, #f44336, #e57373);
+  color: #fff;
+}
+
+/* Legacy support for old Premium/Free classes */
 .dlc-auth-badge.premium {
   background: linear-gradient(135deg, #ffd700, #ffed4e);
   color: #333;
@@ -66,11 +88,6 @@
 .dlc-auth-badge.free {
   background: var(--dlc-free);
   color: #333;
-}
-
-.dlc-auth-badge.not-authenticated {
-  background: var(--dlc-bg-light);
-  color: var(--dlc-text-muted);
 }
 
 /* ===== SIDEBAR ===== */
@@ -243,6 +260,23 @@
   gap: 0.25rem;
 }
 
+/* Tier-based access badges */
+.dlc-access-badge.tier-free {
+  background: var(--dlc-free);
+  color: #333;
+}
+
+.dlc-access-badge.tier-apprentice {
+  background: #ffd700;
+  color: #333;
+}
+
+.dlc-access-badge.tier-wizard {
+  background: #4caf50;
+  color: #fff;
+}
+
+/* Legacy support for old Premium/Free classes */
 .dlc-access-badge.Premium {
   background: var(--dlc-premium);
   color: #333;

@@ -5,7 +5,7 @@
 
 import { DLCUser, DLCAPIConfig } from '../types/module';
 import { APIService } from './api-service';
-import { MODULE_ID } from '../constants';
+import { MODULE_ID, LOG_PREFIX } from '../constants';
 
 export class PatreonAuthService {
   private apiService: APIService;
@@ -47,19 +47,10 @@ export class PatreonAuthService {
         `state=${encodeURIComponent(userId)}&` +
         `scope=identity identity.memberships`;
 
-      // Open OAuth popup
-      const popup = window.open(
-        authUrl,
-        'patreon-auth',
-        'width=600,height=800,menubar=no,toolbar=no,location=no,status=no'
-      );
-
-      if (!popup) {
-        ui.notifications.error(
-          'Failed to open Patreon login window. Please allow popups for this site.'
-        );
-        return null;
-      }
+      // Open OAuth in new tab
+      // Note: In FoundryVTT's Electron environment, window.open may return null
+      // even when the window successfully opens, so we don't block on this check
+      window.open(authUrl, '_blank');
 
       ui.notifications.info('Waiting for Patreon authentication...');
 
@@ -67,6 +58,8 @@ export class PatreonAuthService {
       const userData = await this.pollForAuthentication(userId);
 
       if (userData) {
+        console.log(`${LOG_PREFIX} | Authentication completed successfully`, userData);
+
         // Save user data to settings
         await game.settings.set(MODULE_ID, 'user', userData);
 
@@ -76,16 +69,17 @@ export class PatreonAuthService {
         }
 
         ui.notifications.info(
-          `Successfully authenticated! Access level: ${userData.has_premium ? 'Premium' : 'Free'}`
+          `Successfully authenticated! Access level: ${userData.tier_name}`
         );
 
         return userData;
       } else {
+        console.warn(`${LOG_PREFIX} | Authentication timed out or was cancelled`);
         ui.notifications.warn('Patreon authentication timed out or was cancelled.');
         return null;
       }
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error during Patreon login:', error);
+      console.error(`${LOG_PREFIX} | Error during Patreon login:`, error);
       ui.notifications.error('Failed to authenticate with Patreon. Please try again.');
       return null;
     }
@@ -106,14 +100,16 @@ export class PatreonAuthService {
         const userData = await this.apiService.checkUserStatus();
 
         if (userData) {
+          console.log(`${LOG_PREFIX} | Authentication successful!`, userData);
           return userData;
         }
       } catch (error) {
-        console.error('Dorman Lakely Cartography | Error polling for authentication:', error);
+        console.error(`${LOG_PREFIX} | Error polling for authentication:`, error);
         // Continue polling on error
       }
     }
 
+    console.warn(`${LOG_PREFIX} | Authentication polling timed out`);
     return null;
   }
 
@@ -122,6 +118,8 @@ export class PatreonAuthService {
    */
   async logout(): Promise<void> {
     try {
+      console.log(`${LOG_PREFIX} | Logging out user`);
+
       // Generate new user ID to invalidate the old one
       const newUserId = this.generateUserId();
 
@@ -139,9 +137,10 @@ export class PatreonAuthService {
         game.dlcMaps.settings.user = null;
       }
 
+      console.log(`${LOG_PREFIX} | Logout successful`);
       ui.notifications.info('Successfully logged out.');
     } catch (error) {
-      console.error('Dorman Lakely Cartography | Error during logout:', error);
+      console.error(`${LOG_PREFIX} | Error during logout:`, error);
       ui.notifications.error('Failed to logout. Please try again.');
     }
   }
@@ -191,9 +190,13 @@ export class PatreonAuthService {
    * Refresh authentication if expired
    */
   async refreshIfNeeded(): Promise<void> {
-    if (this.isAuthenticationExpired()) {
-      console.log('Dorman Lakely Cartography | Authentication expired, refreshing...');
-      await this.login();
+    try {
+      if (this.isAuthenticationExpired()) {
+        console.log(`${LOG_PREFIX} | Authentication expired, refreshing...`);
+        await this.login();
+      }
+    } catch (error) {
+      console.error(`${LOG_PREFIX} | Error refreshing authentication:`, error);
     }
   }
 }

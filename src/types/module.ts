@@ -10,6 +10,7 @@ export interface DLCMap {
   tags: string[];
   keywords?: string[];
   access: 'Free' | 'Premium';
+  requiredTier?: string; // Required tier name (e.g., 'free', 'Apprentice', 'Wizard')
   gridSize?: number;
   gridUnits?: string;
   resolution?: {
@@ -30,6 +31,7 @@ export interface DLCUser {
   userId: string;
   has_free: boolean;
   has_premium: boolean;
+  tier_name: string; // Patreon tier name (e.g., 'Free', 'Apprentice', 'Wizard')
   expires_in?: number;
 }
 

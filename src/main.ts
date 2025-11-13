@@ -66,7 +66,10 @@ function registerHandlebarsHelpers(): void {
     return a > b;
   });
 
-  console.log(`${LOG_PREFIX} | Handlebars helpers registered`);
+  // Helper: Convert string to lowercase
+  Handlebars.registerHelper('lowercase', function(str: string) {
+    return typeof str === 'string' ? str.toLowerCase() : str;
+  });
 }
 
 /**
@@ -101,9 +104,9 @@ function registerSettings(): void {
     config: false,
     type: Object,
     default: {
-      baseUrl: 'http://localhost:3000',
-      patreonClientId: 'YOUR_PATREON_CLIENT_ID',
-      patreonRedirectUri: 'http://localhost:3000/v1/patreon/callback'
+      baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+      patreonClientId: import.meta.env.VITE_PATREON_CLIENT_ID || 'YOUR_PATREON_CLIENT_ID',
+      patreonRedirectUri: import.meta.env.VITE_PATREON_REDIRECT_URI || 'http://localhost:3000/v1/patreon/callback'
     } as DLCAPIConfig
   });
 
@@ -148,7 +151,6 @@ function registerSettings(): void {
     onChange: value => {
       // Convert hours to milliseconds
       const ms = value * 60 * 60 * 1000;
-      console.log(`${LOG_PREFIX} | Cache expiry set to ${value} hours (${ms}ms)`);
     }
   });
 }
@@ -192,15 +194,15 @@ Hooks.once('init', async () => {
 
   // Initialize global module data
   const apiConfig = game.settings.get(MODULE_ID, 'apiConfig');
-  console.log(`${LOG_PREFIX} | API Config:`, apiConfig);
+  const savedUser = game.settings.get(MODULE_ID, 'user');
 
   game.dlcMaps = {
     maps: [],
     tags: [],
-    user: null,
+    user: savedUser, // Load saved user from settings
     settings: {
       userId: game.settings.get(MODULE_ID, 'userId'),
-      user: game.settings.get(MODULE_ID, 'user'),
+      user: savedUser,
       apiConfig: apiConfig,
       downloadPath: game.settings.get(MODULE_ID, 'downloadPath'),
       concurrentDownloads: game.settings.get(MODULE_ID, 'concurrentDownloads'),
@@ -231,10 +233,17 @@ Hooks.once('ready', async () => {
     );
   }
 
-  // Log user authentication status
+  // Log user authentication status and check expiry
   const user = game.dlcMaps?.user;
   if (user) {
-    console.log(`${LOG_PREFIX} | User authenticated with ${user.has_premium ? 'Premium' : 'Free'} access`);
+    // Check if authentication has expired
+    if (user.expires_in && Date.now() > user.expires_in) {
+      console.log(`${LOG_PREFIX} | User authentication expired, clearing session`);
+      game.dlcMaps.user = null;
+      game.settings.set(MODULE_ID, 'user', null);
+    } else {
+      console.log(`${LOG_PREFIX} | User authenticated with ${user.tier_name} access`);
+    }
   }
 });
 
@@ -242,15 +251,8 @@ Hooks.once('ready', async () => {
  * Add button to Scenes Directory to open map gallery
  */
 Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
-  console.log(`${LOG_PREFIX} | renderSceneDirectory hook fired`);
-
   // Only show for GMs
-  if (!game.user?.isGM) {
-    console.log(`${LOG_PREFIX} | User is not GM, skipping button`);
-    return;
-  }
-
-  console.log(`${LOG_PREFIX} | Adding gallery button to Scenes Directory`);
+  if (!game.user?.isGM) return;
 
   // Ensure we're working with jQuery
   const $html = html instanceof jQuery ? html : $(html);
@@ -263,7 +265,6 @@ Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
   );
 
   button.on('click', () => {
-    console.log(`${LOG_PREFIX} | Opening map gallery`);
     new MapGalleryDialog().render(true);
   });
 
@@ -271,9 +272,7 @@ Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
   const header = $html.find('.directory-header');
   if (header.length > 0) {
     header.append(button);
-    console.log(`${LOG_PREFIX} | Button added to .directory-header`);
   } else {
-    console.warn(`${LOG_PREFIX} | Could not find .directory-header, trying alternative`);
     $html.find('.directory-list').before(button);
   }
 });
@@ -283,7 +282,6 @@ Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
  * Foundry v13 uses _getEntryContextOptions method instead of hooks
  */
 Hooks.once('init', () => {
-  console.log(`${LOG_PREFIX} | Setting up scene export context menu on prototype`);
 
   // Wrap the SceneDirectory prototype method
   const SceneDirectory = CONFIG.ui.scenes;
@@ -329,6 +327,4 @@ Hooks.once('init', () => {
 
     return options;
   };
-
-  console.log(`${LOG_PREFIX} | Scene export context menu setup complete`);
 });

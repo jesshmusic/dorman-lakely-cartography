@@ -290,6 +290,14 @@ Or set it via game settings in your API on first load.
 # Install dependencies
 npm install
 
+# Configure environment variables
+cp .env.example .env
+
+# Edit .env with your values:
+# - VITE_API_BASE_URL: Your backend API URL (http://localhost:3000 for dev)
+# - VITE_PATREON_CLIENT_ID: Your Patreon OAuth Client ID
+# - VITE_PATREON_REDIRECT_URI: OAuth callback URL
+
 # Build the module
 npm run build
 
@@ -305,6 +313,24 @@ npm run lint
 # Format code
 npm run format
 ```
+
+### Environment Variables
+
+The module requires the following environment variables for development:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend API endpoint | `http://localhost:3000` (dev)<br/>`https://yourdomain.com` (prod) |
+| `VITE_PATREON_CLIENT_ID` | Patreon OAuth Client ID | Get from [Patreon Developers](https://www.patreon.com/portal) |
+| `VITE_PATREON_REDIRECT_URI` | OAuth callback URL | `http://localhost:3000/v1/patreon/callback` (dev) |
+
+**Setup:**
+1. Copy `.env.example` to `.env`
+2. Get your Patreon credentials from [Patreon Developer Portal](https://www.patreon.com/portal/registration/register-clients)
+3. Update the values in `.env`
+4. Rebuild the module with `npm run build`
+
+**Note:** The `.env` file is gitignored and should never be committed. These values get injected into the module at build time and become the default configuration.
 
 ### Project Structure
 ```
