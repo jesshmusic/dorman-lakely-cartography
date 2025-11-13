@@ -38,3 +38,6 @@ package-lock.json
 # Temporary files
 /tmp
 /out-tsc
+
+# Claude Code settings (may contain secrets)
+.claude/settings.local.json
