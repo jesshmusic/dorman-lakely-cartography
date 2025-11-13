@@ -1,0 +1,2 @@
+# Source JSON files for compendium packs
+# Run `npm run build:db` to convert these to LevelDB format

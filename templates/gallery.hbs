@@ -1,0 +1,175 @@
+<div class="dlc-gallery-container">
+  <!-- Header -->
+  <header class="dlc-gallery-header">
+    <div class="dlc-auth-status">
+      {{#if isAuthenticated}}
+        <span class="dlc-auth-badge {{#if isPremium}}premium{{else}}free{{/if}}">
+          <i class="fas fa-user"></i>
+          {{#if isPremium}}Premium Access{{else}}Free Access{{/if}}
+        </span>
+        <button type="button" data-action="logout" class="dlc-btn dlc-btn-secondary">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      {{else}}
+        <span class="dlc-auth-badge not-authenticated">
+          <i class="fas fa-user-slash"></i> Not Logged In
+        </span>
+        <button type="button" data-action="login" class="dlc-btn dlc-btn-primary">
+          <i class="fab fa-patreon"></i> Login with Patreon
+        </button>
+      {{/if}}
+    </div>
+    <div class="dlc-actions">
+      <button type="button" data-action="refreshData" class="dlc-btn dlc-btn-secondary" title="Refresh Map Catalog">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="dlc-gallery-sidebar">
+    <!-- Search -->
+    <div class="dlc-search-box">
+      <input
+        type="text"
+        placeholder="Search maps..."
+        value="{{searchQuery}}"
+        data-action="search"
+        class="dlc-search-input"
+      />
+      <i class="fas fa-search"></i>
+    </div>
+
+    <!-- Tags -->
+    <div class="dlc-tags-section">
+      <h3>
+        Filter by Tags
+        {{#if selectedTags.length}}
+          <button type="button" data-action="clearTags" class="dlc-btn-clear-tags" title="Clear all tags">
+            <i class="fas fa-times"></i>
+          </button>
+        {{/if}}
+      </h3>
+      <div class="dlc-tags-list">
+        {{#each tags}}
+          <button
+            type="button"
+            data-action="selectTag"
+            data-tag="{{this.value}}"
+            class="dlc-tag {{#if (includes ../selectedTags this.value)}}selected{{/if}}"
+          >
+            {{this.label}}
+            {{#if this.count}}<span class="dlc-tag-count">{{this.count}}</span>{{/if}}
+          </button>
+        {{/each}}
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dlc-gallery-main">
+    {{#if hasSelection}}
+      <!-- Map Preview -->
+      <div class="dlc-map-preview">
+        <button type="button" data-action="closePreview" class="dlc-btn-close-preview">
+          <i class="fas fa-arrow-left"></i> Back to Gallery
+        </button>
+
+        <div class="dlc-preview-content">
+          <div class="dlc-preview-image">
+            <img src="{{selectedMap.thumbnail}}" alt="{{selectedMap.name}}" />
+            <span class="dlc-access-badge {{selectedMap.access}}">
+              {{#if (eq selectedMap.access "Premium")}}
+                <i class="fas fa-crown"></i> Premium
+              {{else}}
+                <i class="fas fa-unlock"></i> Free
+              {{/if}}
+            </span>
+          </div>
+
+          <div class="dlc-preview-details">
+            <h2>{{selectedMap.name}}</h2>
+
+            {{#if selectedMap.description}}
+              <p class="dlc-preview-description">{{selectedMap.description}}</p>
+            {{/if}}
+
+            {{#if selectedMap.tags}}
+              <div class="dlc-preview-tags">
+                {{#each selectedMap.tags}}
+                  <span class="dlc-tag-display">{{this}}</span>
+                {{/each}}
+              </div>
+            {{/if}}
+
+            {{#if selectedMap.resolution}}
+              <div class="dlc-preview-meta">
+                <span><i class="fas fa-ruler-combined"></i> {{selectedMap.resolution.width}}x{{selectedMap.resolution.height}}px</span>
+                {{#if selectedMap.gridSize}}
+                  <span><i class="fas fa-th"></i> {{selectedMap.gridSize}}{{#if selectedMap.gridUnits}}{{selectedMap.gridUnits}}{{/if}} grid</span>
+                {{/if}}
+              </div>
+            {{/if}}
+
+            <div class="dlc-preview-actions">
+              <button
+                type="button"
+                data-action="downloadMap"
+                data-map-id="{{selectedMap.id}}"
+                class="dlc-btn dlc-btn-primary dlc-btn-large"
+                {{#unless isAuthenticated}}disabled{{/unless}}
+                {{#if (and (eq selectedMap.access "Premium") (not isPremium))}}disabled{{/if}}
+              >
+                <i class="fas fa-download"></i> Download Map
+              </button>
+
+              {{#unless isAuthenticated}}
+                <p class="dlc-warning"><i class="fas fa-exclamation-triangle"></i> Please log in to download</p>
+              {{/unless}}
+
+              {{#if (and (eq selectedMap.access "Premium") (not isPremium))}}
+                <p class="dlc-warning"><i class="fas fa-lock"></i> Premium access required</p>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+    {{else}}
+      <!-- Map Grid -->
+      <div class="dlc-map-grid">
+        {{#if maps.length}}
+          {{#each maps}}
+            <div class="dlc-map-card" data-action="selectMap" data-map-id="{{this.id}}">
+              <div class="dlc-map-thumbnail">
+                <img src="{{this.thumbnail}}" alt="{{this.name}}" loading="lazy" />
+                <span class="dlc-access-badge {{this.access}}">
+                  {{#if (eq this.access "Premium")}}
+                    <i class="fas fa-crown"></i>
+                  {{else}}
+                    <i class="fas fa-unlock"></i>
+                  {{/if}}
+                </span>
+              </div>
+              <div class="dlc-map-info">
+                <h4 class="dlc-map-title">{{this.name}}</h4>
+                {{#if this.tags}}
+                  <div class="dlc-map-tags">
+                    {{#each this.tags}}
+                      <span class="dlc-tag-mini">{{this}}</span>
+                    {{/each}}
+                  </div>
+                {{/if}}
+              </div>
+            </div>
+          {{/each}}
+        {{else}}
+          <div class="dlc-empty-state">
+            <i class="fas fa-map-marked-alt"></i>
+            <h3>No maps found</h3>
+            <p>Try adjusting your filters or search query</p>
+          </div>
+        {{/if}}
+      </div>
+    {{/if}}
+  </main>
+</div>
