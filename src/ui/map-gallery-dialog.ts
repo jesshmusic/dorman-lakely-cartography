@@ -8,9 +8,11 @@ import { DLCMap, DLCTag } from '../types/module';
 import { APIService } from '../services/api-service';
 import { PatreonAuthService } from '../services/patreon-auth-service';
 import { DownloadDialog } from './download-dialog';
-import { MODULE_ID, MODULE_TITLE } from '../main';
+import { MODULE_ID, MODULE_TITLE } from '../constants';
 
-export class MapGalleryDialog extends foundry.applications.api.ApplicationV2 {
+export class MapGalleryDialog extends foundry.applications.api.HandlebarsApplicationMixin(
+  foundry.applications.api.ApplicationV2
+) {
   private apiService: APIService;
   private authService: PatreonAuthService;
   private maps: DLCMap[] = [];
@@ -55,9 +57,17 @@ export class MapGalleryDialog extends foundry.applications.api.ApplicationV2 {
   constructor(options = {}) {
     super(options);
 
-    // Initialize services
-    const config = game.dlcMaps?.settings.apiConfig!;
-    const userId = game.dlcMaps?.settings.userId || null;
+    // Initialize services - get config from settings directly if not in global
+    const config = game.dlcMaps?.settings.apiConfig || game.settings.get(MODULE_ID, 'apiConfig');
+    const userId = game.dlcMaps?.settings.userId || game.settings.get(MODULE_ID, 'userId');
+
+    if (!config) {
+      console.error(`${MODULE_TITLE} | API config not found!`);
+      ui.notifications.error('Module configuration error. Please check settings.');
+      throw new Error('API config not initialized');
+    }
+
+    console.log(`${MODULE_TITLE} | Initializing with API config:`, config);
 
     this.apiService = new APIService(config, userId);
     this.authService = new PatreonAuthService(this.apiService, config);
@@ -199,18 +209,20 @@ export class MapGalleryDialog extends foundry.applications.api.ApplicationV2 {
     const map = this.maps.find(m => m.id === mapId);
     if (!map) return;
 
-    // Check authentication
-    if (!this.authService.isAuthenticated()) {
-      ui.notifications.warn('Please log in with Patreon to download maps.');
-      return;
+    // Check access level for premium maps only
+    if (map.access === 'Premium') {
+      if (!this.authService.isAuthenticated()) {
+        ui.notifications.warn('Please log in with Patreon to download Premium maps.');
+        return;
+      }
+
+      if (!this.authService.hasPremiumAccess()) {
+        ui.notifications.error('This map requires Premium access. Please upgrade your Patreon tier.');
+        return;
+      }
     }
 
-    // Check access level
-    if (map.access === 'Premium' && !this.authService.hasPremiumAccess()) {
-      ui.notifications.error('This map requires Premium access. Please upgrade your Patreon tier.');
-      return;
-    }
-
+    // Free maps don't require authentication
     // Open download dialog
     new DownloadDialog(map, this.apiService).render(true);
   }

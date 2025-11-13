@@ -77,7 +77,14 @@
 
         <div class="dlc-preview-content">
           <div class="dlc-preview-image">
-            <img src="{{selectedMap.thumbnail}}" alt="{{selectedMap.name}}" />
+            {{#if selectedMap.thumbnail}}
+              <img src="{{selectedMap.thumbnail}}" alt="{{selectedMap.name}}" />
+            {{else}}
+              <div class="dlc-placeholder-image">
+                <i class="fas fa-map-marked-alt"></i>
+                <p>No preview available</p>
+              </div>
+            {{/if}}
             <span class="dlc-access-badge {{selectedMap.access}}">
               {{#if (eq selectedMap.access "Premium")}}
                 <i class="fas fa-crown"></i> Premium
@@ -117,18 +124,20 @@
                 data-action="downloadMap"
                 data-map-id="{{selectedMap.id}}"
                 class="dlc-btn dlc-btn-primary dlc-btn-large"
-                {{#unless isAuthenticated}}disabled{{/unless}}
                 {{#if (and (eq selectedMap.access "Premium") (not isPremium))}}disabled{{/if}}
+                {{#if (and (eq selectedMap.access "Premium") (not isAuthenticated))}}disabled{{/if}}
               >
                 <i class="fas fa-download"></i> Download Map
               </button>
 
-              {{#unless isAuthenticated}}
-                <p class="dlc-warning"><i class="fas fa-exclamation-triangle"></i> Please log in to download</p>
-              {{/unless}}
+              {{#if (eq selectedMap.access "Premium")}}
+                {{#unless isAuthenticated}}
+                  <p class="dlc-warning"><i class="fas fa-exclamation-triangle"></i> Please log in to download Premium maps</p>
+                {{/unless}}
 
-              {{#if (and (eq selectedMap.access "Premium") (not isPremium))}}
-                <p class="dlc-warning"><i class="fas fa-lock"></i> Premium access required</p>
+                {{#if (and isAuthenticated (not isPremium))}}
+                  <p class="dlc-warning"><i class="fas fa-lock"></i> Premium access required</p>
+                {{/if}}
               {{/if}}
             </div>
           </div>
@@ -141,7 +150,13 @@
           {{#each maps}}
             <div class="dlc-map-card" data-action="selectMap" data-map-id="{{this.id}}">
               <div class="dlc-map-thumbnail">
-                <img src="{{this.thumbnail}}" alt="{{this.name}}" loading="lazy" />
+                {{#if this.thumbnail}}
+                  <img src="{{this.thumbnail}}" alt="{{this.name}}" loading="lazy" />
+                {{else}}
+                  <div class="dlc-placeholder-thumbnail">
+                    <i class="fas fa-map-marked-alt"></i>
+                  </div>
+                {{/if}}
                 <span class="dlc-access-badge {{this.access}}">
                   {{#if (eq this.access "Premium")}}
                     <i class="fas fa-crown"></i>

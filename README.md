@@ -38,8 +38,8 @@ A FoundryVTT module for downloading and managing custom battlemaps with Patreon 
 
 ### Opening the Map Gallery
 1. Enable the module in your world
-2. As a GM, open the **Compendium Directory**
-3. Click the **"Dorman Lakely Cartography"** button in the sidebar
+2. As a GM, open the **Scenes Directory** (map icon 🗺️ in the left sidebar)
+3. Click the **"Dorman Lakely Cartography"** button at the top of the sidebar
 
 ### Logging in with Patreon
 1. Click **"Login with Patreon"** in the gallery

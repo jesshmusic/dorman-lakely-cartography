@@ -5,7 +5,7 @@
 
 import { DLCUser, DLCAPIConfig } from '../types/module';
 import { APIService } from './api-service';
-import { MODULE_ID } from '../main';
+import { MODULE_ID } from '../constants';
 
 export class PatreonAuthService {
   private apiService: APIService;

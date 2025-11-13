@@ -34,7 +34,7 @@ export class APIService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/maps/tags`);
+      const response = await fetch(`${this.baseUrl}/v1/maps/tags`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch tags: ${response.statusText}`);
@@ -66,7 +66,7 @@ export class APIService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/maps/list`);
+      const response = await fetch(`${this.baseUrl}/v1/maps/list`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch maps: ${response.statusText}`);
@@ -88,16 +88,22 @@ export class APIService {
   /**
    * Fetch file manifest for a specific map
    */
-  async fetchFileManifest(mapId: string): Promise<DLCFileManifest> {
-    if (!this.userId) {
-      throw new Error('User ID is required for fetching file manifest');
+  async fetchFileManifest(mapId: string, isFreeMap: boolean = false): Promise<DLCFileManifest> {
+    // Only require userId for premium maps
+    if (!isFreeMap && !this.userId) {
+      throw new Error('User ID is required for fetching Premium map file manifest');
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/maps/files/${mapId}`, {
-        headers: {
-          Authorization: this.userId
-        }
+      const headers: Record<string, string> = {};
+
+      // Include authorization header if userId is available
+      if (this.userId) {
+        headers.Authorization = this.userId;
+      }
+
+      const response = await fetch(`${this.baseUrl}/v1/maps/files/${mapId}`, {
+        headers
       });
 
       if (!response.ok) {
@@ -120,18 +126,25 @@ export class APIService {
   /**
    * Download a specific file
    */
-  async downloadFile(mapId: string, filePath: string): Promise<Blob> {
-    if (!this.userId) {
-      throw new Error('User ID is required for downloading files');
+  async downloadFile(mapId: string, filePath: string, isFreeMap: boolean = false): Promise<Blob> {
+    // Only require userId for premium maps
+    if (!isFreeMap && !this.userId) {
+      throw new Error('User ID is required for downloading Premium map files');
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/maps/file/${mapId}`, {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+
+      // Include authorization header if userId is available
+      if (this.userId) {
+        headers.Authorization = this.userId;
+      }
+
+      const response = await fetch(`${this.baseUrl}/v1/maps/file/${mapId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: this.userId
-        },
+        headers,
         body: JSON.stringify({ path: filePath })
       });
 
@@ -146,6 +159,24 @@ export class APIService {
           throw new Error('File not found.');
         }
         throw new Error(`Failed to download file: ${response.statusText}`);
+      }
+
+      // The backend now returns a JSON with a signed URL
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.url) {
+            // Fetch the actual file from the signed URL
+            const fileResponse = await fetch(data.url);
+            if (!fileResponse.ok) {
+              throw new Error(`Failed to download file from storage: ${fileResponse.status} ${fileResponse.statusText}`);
+            }
+            return await fileResponse.blob();
+          }
+        }
+      } catch (jsonError) {
+        console.warn('Dorman Lakely Cartography | Failed to parse JSON response, treating as blob:', jsonError);
       }
 
       return await response.blob();
@@ -164,7 +195,7 @@ export class APIService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/users/${this.userId}/ready`);
+      const response = await fetch(`${this.baseUrl}/v1/users/${this.userId}/ready`);
 
       if (!response.ok) {
         if (response.status === 404) {
