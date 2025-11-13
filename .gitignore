@@ -29,9 +29,6 @@ coverage/
 .env
 .env.local
 
-# Lock files (optional - remove if you want to commit lock files)
-package-lock.json
-
 # Module zip for releases
 *.zip
 
