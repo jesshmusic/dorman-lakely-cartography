@@ -219,7 +219,7 @@ Hooks.once('ready', async () => {
   );
 
   // Check for required modules
-  const requiredModules = ['tagger', 'monks-active-tiles'];
+  const requiredModules = ['tagger', 'monks-active-tiles', 'enhanced-region-behavior'];
   const missingModules = requiredModules.filter(moduleId => !game.modules.get(moduleId)?.active);
 
   if (missingModules.length > 0) {
@@ -249,26 +249,22 @@ Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
   // Only show for GMs
   if (!game.user?.isGM) return;
 
-  // Ensure we're working with jQuery
-  const $html = html instanceof jQuery ? html : $(html);
+  // Ensure we're working with HTMLElement for v13
+  const element = html instanceof HTMLElement ? html : html[0];
 
-  // Add button to scenes sidebar
-  const button = $(
-    `<button class="dlc-open-gallery">
-      <i class="fas fa-map-marked-alt"></i> ${MODULE_TITLE}
-    </button>`
-  );
-
-  button.on('click', () => {
+  // Create button using native DOM (matching FA Battlemaps pattern)
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.classList.add('dlc-open-gallery');
+  button.innerHTML = `<i class="fas fa-map-marked-alt" aria-hidden="true"></i> ${MODULE_TITLE}`;
+  button.addEventListener('click', () => {
     new MapGalleryDialog().render(true);
   });
 
-  // Try multiple insertion points
-  const header = $html.find('.directory-header');
-  if (header.length > 0) {
-    header.append(button);
-  } else {
-    $html.find('.directory-list').before(button);
+  // Add to header actions (same as FA Battlemaps)
+  const headerActions = element.querySelector('.header-actions');
+  if (headerActions) {
+    headerActions.append(button);
   }
 });
 

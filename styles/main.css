@@ -413,9 +413,91 @@
 }
 
 .dlc-preview-description {
-  color: var(--dlc-text-muted);
+  color: var(--dlc-text);
   line-height: 1.6;
   margin-bottom: 1.5rem;
+}
+
+/* Description content styles */
+.dlc-preview-description p {
+  margin: 0 0 1rem 0;
+  color: var(--dlc-text-muted);
+}
+
+.dlc-preview-description p:last-child {
+  margin-bottom: 0;
+}
+
+.dlc-preview-description h1,
+.dlc-preview-description h2,
+.dlc-preview-description h3,
+.dlc-preview-description h4 {
+  color: var(--dlc-text);
+  margin: 1.25rem 0 0.5rem 0;
+  font-weight: bold;
+}
+
+.dlc-preview-description h1:first-child,
+.dlc-preview-description h2:first-child,
+.dlc-preview-description h3:first-child,
+.dlc-preview-description h4:first-child {
+  margin-top: 0;
+}
+
+.dlc-preview-description h3 {
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--dlc-border);
+  padding-bottom: 0.25rem;
+}
+
+.dlc-preview-description h4 {
+  font-size: 0.9rem;
+}
+
+.dlc-preview-description em {
+  font-style: italic;
+  color: var(--dlc-text-muted);
+}
+
+.dlc-preview-description strong {
+  font-weight: bold;
+  color: var(--dlc-text);
+}
+
+.dlc-preview-description ul,
+.dlc-preview-description ol {
+  margin: 0.5rem 0 1rem 0;
+  padding-left: 1.5rem;
+  color: var(--dlc-text-muted);
+}
+
+.dlc-preview-description li {
+  margin-bottom: 0.25rem;
+}
+
+.dlc-preview-description a {
+  color: var(--dlc-primary);
+  text-decoration: none;
+}
+
+.dlc-preview-description a:hover {
+  text-decoration: underline;
+}
+
+.dlc-preview-description blockquote {
+  border-left: 3px solid var(--dlc-primary);
+  margin: 1rem 0;
+  padding: 0.5rem 0 0.5rem 1rem;
+  color: var(--dlc-text-muted);
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0 4px 4px 0;
+}
+
+.dlc-preview-description hr {
+  border: none;
+  border-top: 1px solid var(--dlc-border);
+  margin: 1rem 0;
 }
 
 .dlc-preview-tags {
@@ -463,23 +545,26 @@
 
 /* ===== SCENES DIRECTORY BUTTON ===== */
 .dlc-open-gallery {
-  width: 100%;
-  padding: 6px 12px;
-  margin: 4px 0;
-  background: var(--color-bg-option);
-  color: var(--color-text-light-heading);
-  border: 1px solid var(--color-border-dark-tertiary);
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: normal;
-  transition: all 0.1s;
-  display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  box-shadow: none;
-  text-align: left;
+  background: var(--button-background-color);
+  border-radius: 4px;
+  border: 1px solid var(--button-border-color);
+  color: var(--button-text-color);
+  cursor: var(--cursor-pointer);
+  display: flex;
+  flex: 0 0 100%;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-14);
+  gap: 0.25rem;
+  height: var(--button-size);
+  justify-content: center;
+  line-height: normal;
+  min-height: var(--button-size);
+  order: 1;
+  padding: 0 0.5rem;
+  text-decoration: none;
+  transition: 0.5s;
+  width: 100%;
 }
 
 .dlc-open-gallery:hover {

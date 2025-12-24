@@ -38,17 +38,17 @@ If you need to use the console script directly:
 5. **Paste it into the console** and press Enter
 6. **Run the export command:**
    ```javascript
-   exportScenePackage("Your Scene Name")
+   exportScenePackage('Your Scene Name');
    ```
 
 ### Example
 
 ```javascript
 // List all available scenes
-listScenes()
+listScenes();
 
 // Export a specific scene
-exportScenePackage("Dungeon Depths")
+exportScenePackage('Dungeon Depths');
 ```
 
 ### What Gets Packaged
@@ -86,6 +86,7 @@ After exporting:
 6. Click "Create Map" or "Update Map"
 
 The system will automatically:
+
 - Extract all files from the ZIP
 - Update asset paths in scene.json
 - Upload everything to S3/Cloudflare R2
@@ -140,7 +141,7 @@ You can modify the script to:
 To export multiple scenes:
 
 ```javascript
-const sceneNames = ["Dungeon Level 1", "Dungeon Level 2", "Dungeon Level 3"];
+const sceneNames = ['Dungeon Level 1', 'Dungeon Level 2', 'Dungeon Level 3'];
 
 for (const sceneName of sceneNames) {
   await exportScenePackage(sceneName);
@@ -152,6 +153,7 @@ for (const sceneName of sceneNames) {
 ## Support
 
 For issues or questions:
-- Check the main [MAP_PACKAGING_GUIDE.md](../../../../../../../Code/dungeon-master-guru/MAP_PACKAGING_GUIDE.md) documentation
-- Review [FOUNDRY_SCENE_FORMAT.md](../../../../../../../Code/dungeon-master-guru/FOUNDRY_SCENE_FORMAT.md) for format details
+
+- Check the main [MAP_PACKAGING_GUIDE.md](https://github.com/jesshmusic/dm-campaign-manager/blob/master/MAP_PACKAGING_GUIDE.md) documentation
+- Review [FOUNDRY_SCENE_FORMAT.md](https://github.com/jesshmusic/dm-campaign-manager/blob/master/FOUNDRY_SCENE_FORMAT.md) for format details
 - Open an issue on GitHub
