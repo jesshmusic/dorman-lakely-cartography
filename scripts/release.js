@@ -47,7 +47,7 @@ fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + '\n');
 // Update module.json
 moduleJson.version = newVersion;
 // Update download URL to match new version (update with your actual repo URL)
-moduleJson.download = `https://github.com/YOUR_USERNAME/dorman-lakely-cartography/releases/download/v${newVersion}/module.zip`;
+moduleJson.download = `https://github.com/jesshmusic/dorman-lakely-cartography/releases/download/v${newVersion}/module.zip`;
 fs.writeFileSync(modulePath, JSON.stringify(moduleJson, null, 2) + '\n');
 
 // Generate changelog

@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-12-24
+
+### Added
+- Add .env.production to gitignore
+- Add environment variables to release workflow
+- Add enhanced-region-behavior dependency and improve UI
+- fix: add package-lock.json for reproducible CI builds
+- chore: add .claude/settings.local.json to .gitignore
+- release v1.0.0 with tier-based Patreon authentication
+- Scene export and download improvements v0.2.0
+
+### Fixed
+- resolve all linting errors and test failures
+
+### Changed
+- Initial module setup v0.1.0
+
+### Other
+- Address Copilot review comments
+- docs: rewrite README for end users instead of developers
+
+
 ## [0.1.0] - 2025-01-XX
 
 ### Added
