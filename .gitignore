@@ -38,3 +38,4 @@ coverage/
 
 # Claude Code settings (may contain secrets)
 .claude/settings.local.json
+.env.production
