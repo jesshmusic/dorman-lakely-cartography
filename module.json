@@ -2,7 +2,7 @@
   "id": "dorman-lakely-cartography",
   "title": "Dorman Lakely Cartography",
   "description": "A FoundryVTT module for downloading and managing Dorman Lakely custom battlemaps with Patreon integration.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "authors": [
     {
       "name": "Dorman Lakely",
@@ -14,12 +14,25 @@
     "verified": "13",
     "maximum": "13"
   },
-  "esmodules": [
-    "dist/main.js"
-  ],
-  "styles": [
-    "styles/main.css"
-  ],
+  "relationships": {
+    "requires": [
+      {
+        "id": "tagger",
+        "type": "module"
+      },
+      {
+        "id": "monks-active-tiles",
+        "type": "module"
+      },
+      {
+        "id": "enhanced-region-behavior",
+        "type": "module",
+        "reason": "Required for elevation region behaviors in imported maps"
+      }
+    ]
+  },
+  "esmodules": ["dist/main.js"],
+  "styles": ["styles/main.css"],
   "languages": [
     {
       "lang": "en",

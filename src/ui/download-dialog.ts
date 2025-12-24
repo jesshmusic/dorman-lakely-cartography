@@ -417,6 +417,19 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
 
         // Log the actual paths Foundry is using
         console.log(`${MODULE_TITLE} | Scene background path:`, scene.background?.src);
+
+        // Generate thumbnail for the scene
+        try {
+          console.log(`${MODULE_TITLE} | Generating thumbnail for scene...`);
+          const thumbData = await scene.createThumbnail();
+          if (thumbData?.thumb) {
+            await scene.update({ thumb: thumbData.thumb });
+            console.log(`${MODULE_TITLE} | ✓ Thumbnail generated successfully`);
+          }
+        } catch (thumbError) {
+          console.warn(`${MODULE_TITLE} | Failed to generate thumbnail:`, thumbError);
+          // Non-fatal error, scene was still created
+        }
       }
     } catch (error) {
       console.error(`${MODULE_TITLE} | Error importing scene:`, error);

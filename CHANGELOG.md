@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-01-XX
 
 ### Added
+
 - Initial release of Dorman Lakely Cartography module
 - Map gallery UI with grid view and detailed preview
 - Tag-based filtering system for maps
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - English localization
 
 ### Technical Details
+
 - Built with TypeScript 5.9+ targeting ES2020
 - Uses ApplicationV2 (Foundry v13+ modern API)
 - Requires Monk's Active Tiles and Tagger modules
@@ -39,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned Features
+
 - Additional language support (French, Spanish, German)
 - Map favorites/bookmarks system
 - Download queue management

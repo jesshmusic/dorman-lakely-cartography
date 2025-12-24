@@ -16,18 +16,22 @@ A FoundryVTT module that gives you instant access to Dorman Lakely's custom batt
 ## Installation
 
 ### From Foundry VTT
+
 1. Open **Add-on Modules** in Foundry
 2. Click **Install Module**
 3. Search for **"Dorman Lakely Cartography"**
 4. Click **Install**
 
 ### Manual Installation
+
 1. Download the [latest release](https://github.com/jesshmusic/dorman-lakely-cartography/releases)
 2. Extract to `FoundryData/Data/modules/dorman-lakely-cartography/`
 3. Restart Foundry VTT
 
 ### Required Modules
+
 This module needs these other modules to work properly:
+
 - [Tagger](https://foundryvtt.com/packages/tagger) - For entity tagging
 - [Monk's Active Tiles](https://foundryvtt.com/packages/monks-active-tiles) - For interactive map elements
 
@@ -36,11 +40,14 @@ Foundry will prompt you to install these if you don't have them.
 ## How to Use
 
 ### 1. Open the Map Gallery
+
 As a Game Master:
+
 1. Go to the **Scenes Directory** (map icon 🗺️ on the left sidebar)
 2. Click the **"Dorman Lakely Cartography"** button at the top
 
 ### 2. Log in with Patreon (Optional)
+
 - Click **"Login with Patreon"** if you're a patron
 - A popup will open - authorize the app
 - Your tier badge will appear (Free, Apprentice, or Wizard)
@@ -49,6 +56,7 @@ As a Game Master:
 **Don't have Patreon?** No problem! Free maps are available without logging in.
 
 ### 3. Browse and Download Maps
+
 1. **Search** - Type keywords like "tavern" or "dungeon"
 2. **Filter by tags** - Click tags like "Urban", "Forest", or "Combat"
 3. **View details** - Click any map to see the full description
@@ -58,7 +66,9 @@ As a Game Master:
 7. **Done!** - The scene is automatically imported to your Scenes Directory
 
 ### 4. Use Your Maps
+
 After downloading:
+
 1. Go to **Scenes Directory**
 2. Find your new scene (it will be in the "Dorman Lakely Maps" folder)
 3. Right-click and select **Activate** to load it
@@ -67,17 +77,20 @@ After downloading:
 ## Patreon Tiers
 
 ### 🆓 Free Tier
+
 - Access to a rotating selection of free maps
 - Full scene configuration
 - No login required
 
 ### 🟡 Apprentice Tier ($3/month)
+
 - All free maps
 - Access to Apprentice-tier exclusive maps
 - Early access to new releases
 - [Become an Apprentice](https://patreon.com/YOUR_PATREON_USERNAME)
 
 ### 🟢 Wizard Tier ($5/month)
+
 - All Apprentice maps
 - Full access to the entire map library
 - Exclusive premium scenes
@@ -95,21 +108,25 @@ Access settings via **Configure Settings > Module Settings > Dorman Lakely Carto
 ## Troubleshooting
 
 ### "Login with Patreon" doesn't work
+
 - Make sure pop-ups are enabled in your browser
 - Try logging in again after a few seconds
 - Check your Patreon subscription is active
 
 ### Maps won't download
+
 - Check your internet connection
 - Verify you have the required tier for premium maps
 - Make sure you have enough disk space
 
 ### Scenes aren't appearing after download
+
 - Look in the "Dorman Lakely Maps" folder in your Scenes Directory
 - Try refreshing Foundry (F5)
 - Check the browser console for errors (F12)
 
 ### Required modules not installed
+
 - Install [Tagger](https://foundryvtt.com/packages/tagger)
 - Install [Monk's Active Tiles](https://foundryvtt.com/packages/monks-active-tiles)
 - Restart Foundry after installing
