@@ -154,6 +154,6 @@ for (const sceneName of sceneNames) {
 
 For issues or questions:
 
-- Check the main [MAP_PACKAGING_GUIDE.md](../../../../../../../Code/dungeon-master-guru/MAP_PACKAGING_GUIDE.md) documentation
-- Review [FOUNDRY_SCENE_FORMAT.md](../../../../../../../Code/dungeon-master-guru/FOUNDRY_SCENE_FORMAT.md) for format details
+- Check the main [MAP_PACKAGING_GUIDE.md](https://github.com/jesshmusic/dm-campaign-manager/blob/master/MAP_PACKAGING_GUIDE.md) documentation
+- Review [FOUNDRY_SCENE_FORMAT.md](https://github.com/jesshmusic/dm-campaign-manager/blob/master/FOUNDRY_SCENE_FORMAT.md) for format details
 - Open an issue on GitHub

@@ -256,7 +256,7 @@ Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
   const button = document.createElement('button');
   button.type = 'button';
   button.classList.add('dlc-open-gallery');
-  button.innerHTML = `<i class="fas fa-map-marked-alt" inert></i> ${MODULE_TITLE}`;
+  button.innerHTML = `<i class="fas fa-map-marked-alt" aria-hidden="true"></i> ${MODULE_TITLE}`;
   button.addEventListener('click', () => {
     new MapGalleryDialog().render(true);
   });

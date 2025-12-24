@@ -34,6 +34,7 @@ This module needs these other modules to work properly:
 
 - [Tagger](https://foundryvtt.com/packages/tagger) - For entity tagging
 - [Monk's Active Tiles](https://foundryvtt.com/packages/monks-active-tiles) - For interactive map elements
+- [Enhanced Region Behavior](https://foundryvtt.com/packages/enhanced-region-behavior) - For elevation region behaviors in maps
 
 Foundry will prompt you to install these if you don't have them.
 
