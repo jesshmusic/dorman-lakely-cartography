@@ -46,7 +46,7 @@
       "label": "Dorman Lakely Maps",
       "path": "packs/maps",
       "type": "Scene",
-      "system": [],
+      "system": "dnd5e",
       "ownership": {
         "PLAYER": "OBSERVER",
         "ASSISTANT": "OWNER"
