@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-01-13
+
+### Added
+
+- chore: bump version to 1.0.1 and add auto-release workflow
+- Add .env.production to gitignore
+- Add environment variables to release workflow
+- Add enhanced-region-behavior dependency and improve UI
+- fix: add package-lock.json for reproducible CI builds
+- chore: add .claude/settings.local.json to .gitignore
+- release v1.0.0 with tier-based Patreon authentication
+- Scene export and download improvements v0.2.0
+
+### Fixed
+
+- set pack system to dnd5e
+- resolve all linting errors and test failures
+
+### Changed
+
+- bump version to 1.0.2
+- Initial module setup v0.1.0
+
+### Other
+
+- Address Copilot review comments
+- docs: rewrite README for end users instead of developers
+
 ## [1.0.2] - 2026-01-03
 
 ### Added

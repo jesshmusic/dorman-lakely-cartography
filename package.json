@@ -1,6 +1,6 @@
 {
   "name": "dorman-lakely-cartography",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A FoundryVTT module for downloading and managing Dorman Lakely custom battlemaps with Patreon integration",
   "main": "dist/main.js",
   "type": "commonjs",
