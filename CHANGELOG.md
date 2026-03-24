@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-03-24
+
+### Fixed
+
+- Improved Patreon login error handling — detect closed auth popup and stop polling early instead of waiting 2 minutes
+- Clear user feedback for non-patrons: explains free maps are available without a subscription
+- Better timeout/cancellation messages that guide users to free maps if authentication fails
+- Differentiated success messages based on access tier (Premium, Free, or no active pledge)
+
 ## [1.0.3] - 2026-01-13
 
 ### Added

@@ -29,6 +29,17 @@ export class PatreonAuthService {
    */
   async login(): Promise<DLCUser | null> {
     try {
+      // Validate that the Patreon client ID is configured
+      if (
+        !this.config.patreonClientId ||
+        this.config.patreonClientId === 'YOUR_PATREON_CLIENT_ID'
+      ) {
+        ui.notifications.error(
+          'Patreon integration is not yet configured. The module author needs to set up a Patreon OAuth application.'
+        );
+        return null;
+      }
+
       // Generate new user ID
       const userId = this.generateUserId();
 
@@ -50,12 +61,21 @@ export class PatreonAuthService {
       // Open OAuth in new tab
       // Note: In FoundryVTT's Electron environment, window.open may return null
       // even when the window successfully opens, so we don't block on this check
-      window.open(authUrl, '_blank');
+      const authWindow = window.open(authUrl, '_blank');
 
-      ui.notifications.info('Waiting for Patreon authentication...');
+      if (authWindow) {
+        ui.notifications.info('Waiting for Patreon authentication... Complete the login in the opened tab.');
+      } else {
+        // In Electron, window.open may return null even on success.
+        // Popup close detection won't work, so polling runs the full timeout.
+        ui.notifications.info(
+          'Patreon login opened. Complete the login, then return here. ' +
+          'If nothing happens after a couple minutes, try again.'
+        );
+      }
 
-      // Poll for authentication completion
-      const userData = await this.pollForAuthentication(userId);
+      // Poll for authentication completion, watching for closed popup
+      const userData = await this.pollForAuthentication(userId, authWindow);
 
       if (userData) {
         console.log(`${LOG_PREFIX} | Authentication completed successfully`, userData);
@@ -68,31 +88,59 @@ export class PatreonAuthService {
           game.dlcMaps.user = userData;
         }
 
-        ui.notifications.info(`Successfully authenticated! Access level: ${userData.tier_name}`);
+        // Provide clear feedback based on access level
+        if (userData.has_premium) {
+          ui.notifications.info(`Welcome! You have Premium access (${userData.tier_name}). All maps are available.`);
+        } else if (userData.has_free) {
+          ui.notifications.info(`Welcome! You have Free tier access (${userData.tier_name}). Upgrade on Patreon for premium maps.`);
+        } else {
+          ui.notifications.warn(
+            `Authenticated with Patreon, but your account does not have an active pledge. ` +
+            `Free maps are still available. Visit our Patreon page to subscribe for premium maps.`
+          );
+        }
 
         return userData;
       } else {
         console.warn(`${LOG_PREFIX} | Authentication timed out or was cancelled`);
-        ui.notifications.warn('Patreon authentication timed out or was cancelled.');
+        ui.notifications.warn(
+          'Patreon authentication was not completed. If you saw an error on Patreon\'s page, ' +
+          'please try again. Free maps are available without logging in.'
+        );
         return null;
       }
     } catch (error) {
       console.error(`${LOG_PREFIX} | Error during Patreon login:`, error);
-      ui.notifications.error('Failed to authenticate with Patreon. Please try again.');
+      ui.notifications.error(
+        'Failed to authenticate with Patreon. Please try again. ' +
+        'If the problem persists, free maps are still available without logging in.'
+      );
       return null;
     }
   }
 
   /**
    * Poll API for authentication completion
-   * Checks every 2 seconds for up to 2 minutes
+   * Checks every 2 seconds for up to 2 minutes.
+   * Stops early if the auth popup is closed without completing.
    */
-  private async pollForAuthentication(_userId: string): Promise<DLCUser | null> {
+  private async pollForAuthentication(_userId: string, authWindow: Window | null): Promise<DLCUser | null> {
     const maxAttempts = 60; // 2 minutes (60 * 2 seconds)
     const pollInterval = 2000; // 2 seconds
+    let windowClosedCount = 0;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       await new Promise(resolve => setTimeout(resolve, pollInterval));
+
+      // Check if the auth popup was closed without completing
+      // Give a few poll cycles after close in case the redirect completed just before
+      if (authWindow && authWindow.closed) {
+        windowClosedCount++;
+        if (windowClosedCount >= 3) {
+          console.warn(`${LOG_PREFIX} | Auth window was closed without completing authentication`);
+          return null;
+        }
+      }
 
       try {
         const userData = await this.apiService.checkUserStatus();
