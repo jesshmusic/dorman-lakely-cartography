@@ -63,7 +63,16 @@ export class PatreonAuthService {
       // even when the window successfully opens, so we don't block on this check
       const authWindow = window.open(authUrl, '_blank');
 
-      ui.notifications.info('Waiting for Patreon authentication... Complete the login in the opened tab.');
+      if (authWindow) {
+        ui.notifications.info('Waiting for Patreon authentication... Complete the login in the opened tab.');
+      } else {
+        // In Electron, window.open may return null even on success.
+        // Popup close detection won't work, so polling runs the full timeout.
+        ui.notifications.info(
+          'Patreon login opened. Complete the login, then return here. ' +
+          'If nothing happens after a couple minutes, try again.'
+        );
+      }
 
       // Poll for authentication completion, watching for closed popup
       const userData = await this.pollForAuthentication(userId, authWindow);
