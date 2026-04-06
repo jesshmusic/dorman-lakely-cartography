@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-06
+
+### Added
+
+- Foundry VTT v14 compatibility (`compatibility.verified` bumped to `14`, hard `maximum: "13"` cap removed).
+
+### Fixed
+
+- **Scene creation now uses the document class lookup** instead of the bare `Scene` global. The download flow at `src/ui/download-dialog.ts:412` now resolves the Scene constructor through `getDocumentClass("Scene")` (with fallbacks to `foundry.documents.Scene` and the legacy `Scene` global) so map imports keep working if/when Foundry drops the bare global in a future release.
+
 ## [1.0.4] - 2026-03-24
 
 ### Fixed

@@ -407,9 +407,15 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
         sounds: sceneData.sounds?.length || 0
       });
 
-      // Create the scene
+      // Create the scene. Use the document class lookup so this keeps working
+      // if v14 (or later) drops the bare `Scene` global in favour of namespaced
+      // foundry.documents.Scene.
       console.log(`${MODULE_TITLE} | Creating scene: ${sceneData.name}`);
-      const scene = await Scene.create(sceneData);
+      const SceneClass =
+        (globalThis as any).getDocumentClass?.('Scene') ??
+        (foundry as any).documents?.Scene ??
+        (Scene as any);
+      const scene = await SceneClass.create(sceneData);
 
       if (scene) {
         ui.notifications.info(`Scene "${sceneData.name}" imported successfully!`);
