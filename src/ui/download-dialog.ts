@@ -409,12 +409,16 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
 
       // Create the scene. Use the document class lookup so this keeps working
       // if v14 (or later) drops the bare `Scene` global in favour of namespaced
-      // foundry.documents.Scene.
+      // foundry.documents.Scene. NOTE: the final fallback uses
+      // `(globalThis as any).Scene`, NOT a bare `Scene` reference — a bare
+      // identifier throws ReferenceError before the `??` can fall through if
+      // the global has been removed entirely. Property access on `globalThis`
+      // returns `undefined` instead of throwing.
       console.log(`${MODULE_TITLE} | Creating scene: ${sceneData.name}`);
       const SceneClass =
         (globalThis as any).getDocumentClass?.('Scene') ??
         (foundry as any).documents?.Scene ??
-        (Scene as any);
+        (globalThis as any).Scene;
       const scene = await SceneClass.create(sceneData);
 
       if (scene) {
