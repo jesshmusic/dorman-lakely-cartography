@@ -10,7 +10,7 @@
     }
   ],
   "compatibility": {
-    "minimum": "13",
+    "minimum": "14",
     "verified": "14"
   },
   "relationships": {
@@ -30,8 +30,12 @@
       }
     ]
   },
-  "esmodules": ["dist/main.js"],
-  "styles": ["styles/main.css"],
+  "esmodules": [
+    "dist/main.js"
+  ],
+  "styles": [
+    "styles/main.css"
+  ],
   "languages": [
     {
       "lang": "en",
@@ -56,7 +60,9 @@
     {
       "name": "Dorman Lakely Cartography",
       "sorting": "a",
-      "packs": ["maps"]
+      "packs": [
+        "maps"
+      ]
     }
   ],
   "url": "https://github.com/jesshmusic/dorman-lakely-cartography",
