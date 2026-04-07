@@ -9,6 +9,62 @@ import { MODULE_ID, MODULE_TITLE, LOG_PREFIX } from './constants';
 import { SceneExporter } from './services/scene-exporter';
 
 /**
+ * Compare an installed dependency's declared Foundry compatibility against
+ * the running Foundry core version and surface a user-visible notification
+ * if the dep declares itself incompatible. Only fires for deps that ARE
+ * installed and active — uninstalled / inactive cases are handled by the
+ * existing required-modules check further down in the ready hook.
+ *
+ * This exists because several upstream dependencies (tagger,
+ * enhanced-region-behavior, monks-active-tiles) still declare themselves
+ * v13-only in their manifests. When they happen to run on v14 anyway
+ * (either because the user locally bumped the maximum or because the dep
+ * has no maximum), users get silent breakage. The warning tells them
+ * which specific dep is stale.
+ */
+function warnIfDepOutdated(depId: string, displayName: string): void {
+  const mod = (game as any).modules?.get(depId);
+  if (!mod || !mod.active) {
+    // Existing "not installed" / "not active" paths already handle these.
+    return;
+  }
+
+  const coreMajor =
+    (game as any).release?.generation ??
+    parseInt(String((game as any).version ?? '0'), 10);
+  if (!coreMajor || Number.isNaN(coreMajor)) return;
+
+  const parseMajor = (v: unknown): number | null => {
+    if (v == null) return null;
+    const m = String(v).match(/^(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+
+  const compat = mod.compatibility ?? {};
+  const depMax = parseMajor(compat.maximum);
+  const depVerified = parseMajor(compat.verified);
+
+  // Hard cap below current Foundry major → permanent warning
+  if (depMax != null && depMax < coreMajor) {
+    ui.notifications?.warn(
+      `${MODULE_TITLE}: ${displayName} v${mod.version} declares Foundry v${compat.maximum} as its maximum, ` +
+        `but you are running Foundry v${(game as any).version}. Expect bugs until ${displayName} ships an update.`,
+      { permanent: true }
+    );
+    return;
+  }
+
+  // No hard cap but verified is behind → transient warning
+  if (depVerified != null && depVerified < coreMajor) {
+    ui.notifications?.warn(
+      `${MODULE_TITLE}: ${displayName} v${mod.version} is only verified for Foundry v${compat.verified}. ` +
+        `You're running v${(game as any).version} — some features may not work until ${displayName} ships a v${coreMajor}-verified release.`,
+      { permanent: false }
+    );
+  }
+}
+
+/**
  * Register Handlebars helpers
  */
 function registerHandlebarsHelpers(): void {
@@ -218,7 +274,7 @@ Hooks.once('ready', async () => {
     'color: #4caf50; font-weight: bold; font-size: 14px;'
   );
 
-  // Check for required modules
+  // Check for required modules (not installed / not active path)
   const requiredModules = ['tagger', 'monks-active-tiles', 'enhanced-region-behavior'];
   const missingModules = requiredModules.filter(moduleId => !game.modules.get(moduleId)?.active);
 
@@ -227,6 +283,14 @@ Hooks.once('ready', async () => {
       `${MODULE_TITLE}: The following required modules are not active: ${missingModules.join(', ')}`
     );
   }
+
+  // Per-dep Foundry version-compat warnings for deps that ARE installed
+  // and active but whose manifest declares itself incompatible with the
+  // running Foundry version. Layered on top of the "not installed" warn
+  // above — only fires when the dep is present.
+  warnIfDepOutdated('tagger', 'Tagger');
+  warnIfDepOutdated('monks-active-tiles', "Monk's Active Tiles");
+  warnIfDepOutdated('enhanced-region-behavior', 'Enhanced Region Behavior');
 
   // Log user authentication status and check expiry
   const user = game.dlcMaps?.user;

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-04-07
+
+### Added
+
+- **Runtime dependency version warnings**. When Tagger, Monk's Active Tiles, or Enhanced Region Behavior is installed and active but its manifest declares itself incompatible with the running Foundry version (i.e. `compatibility.maximum` is below the current Foundry major, or `compatibility.verified` is behind), a notification now fires on `ready` naming the specific dep and its declared max/verified version. Hard-cap mismatches are permanent notifications; stale-verified mismatches are transient. Only fires for deps that are present and active — the existing "not installed" warning path is untouched.
+
 ## [1.1.0] - 2026-04-06
 
 ### Added
