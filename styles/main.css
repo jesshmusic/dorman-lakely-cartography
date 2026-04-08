@@ -16,6 +16,15 @@
   --dlc-border: #555;
   --dlc-text: #e0e0e0;
   --dlc-text-muted: #999;
+
+  /* Dungeon Master Guru brand palette — used in the footer card and any
+     future cross-promotion surfaces. Defined globally so other dlc-* rules
+     can pick them up later, but no V2 base background or text color is
+     touched here. */
+  --dmguru-cream: #f9f1dc;
+  --dmguru-taupe: #645e56;
+  --dmguru-burgundy: #5b1d12;
+  --dmguru-rust: #9a2d1e;
 }
 
 /* ===== GALLERY CONTAINER ===== */
@@ -832,4 +841,104 @@
 .dlc-gallery-main::-webkit-scrollbar-thumb:hover,
 .dlc-file-list-scroll::-webkit-scrollbar-thumb:hover {
   background: #666;
+}
+
+/* ===================================
+   Footer (Patreon + Dungeon Master Guru)
+   =================================== */
+
+.dlc-gallery-container {
+  /* Re-grid to make room for the footer row beneath header/sidebar/main */
+  grid-template-areas:
+    'header header'
+    'sidebar main'
+    'footer footer';
+  grid-template-rows: auto 1fr auto;
+}
+
+.dlc-footer {
+  grid-area: footer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--dlc-border);
+  background: var(--dlc-bg);
+}
+
+.dlc-footer-links {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dlc-patreon-link,
+.dlc-dmguru-link {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid transparent;
+}
+
+.dlc-patreon-link i {
+  font-size: 18px;
+}
+
+/* Patreon: solid burgundy */
+.dlc-patreon-link {
+  background: var(--dmguru-burgundy);
+  color: white;
+  border-color: var(--dmguru-burgundy);
+}
+
+.dlc-patreon-link:hover,
+.dlc-patreon-link:focus-visible {
+  background: #7a2518;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+  color: white;
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* DM Guru: parchment cream + burgundy text + dragon logo */
+.dlc-dmguru-link {
+  background: var(--dmguru-cream);
+  color: var(--dmguru-burgundy);
+  border-color: var(--dmguru-taupe);
+}
+
+.dlc-dmguru-link:hover,
+.dlc-dmguru-link:focus-visible {
+  background: #ece1c0;
+  color: var(--dmguru-rust);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+  outline: 2px solid var(--dmguru-taupe);
+  outline-offset: 2px;
+}
+
+.dlc-dmguru-link .dlc-dmguru-logo {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.dlc-version-info {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--dlc-text-muted);
+  font-family: monospace;
 }
