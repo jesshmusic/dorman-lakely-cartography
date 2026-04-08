@@ -130,71 +130,90 @@ function registerHandlebarsHelpers(): void {
 
 /**
  * Small ApplicationV2 subclasses for Patreon / DM Guru settings menu entries.
- * Each one renders an invisible shell, immediately opens a DialogV2 prompt
- * with a "Visit" button that opens the target URL in a new tab, then closes
- * itself. Registered via `game.settings.registerMenu` in `registerSettings`.
+ * Each one renders an empty shell and, on first paint, opens a DialogV2.wait
+ * prompt with a "Visit" button that opens the target URL in a new tab, then
+ * closes itself. Registered via `game.settings.registerMenu` in
+ * `registerSettings`.
+ *
+ * Method signatures match the project's ambient `foundry.applications.api`
+ * types in `src/types/foundry.d.ts`: `_renderHTML` returns `Promise<string>`
+ * and `_replaceHTML` takes `(string, HTMLElement, any)`.
  */
-const { ApplicationV2: _ApplicationV2 } = (foundry as any).applications.api;
-const _DialogV2 = (foundry as any).applications.api.DialogV2;
-
-class PatreonLink extends _ApplicationV2 {
-  static DEFAULT_OPTIONS = {
+class PatreonLink extends foundry.applications.api.ApplicationV2 {
+  static DEFAULT_OPTIONS: foundry.applications.api.ApplicationV2Options = {
     id: 'dlc-patreon-link',
     tag: 'div',
     window: { title: 'Support on Patreon', icon: 'fab fa-patreon' },
     position: { width: 1, height: 1 }
-  } as const;
+  };
 
-  async _renderHTML(): Promise<HTMLElement> {
-    return document.createElement('div');
+  protected async _renderHTML(_context: any, _options: any): Promise<string> {
+    return '';
   }
 
-  _replaceHTML(result: HTMLElement, content: HTMLElement): void {
-    content.replaceChildren(result);
+  protected _replaceHTML(_result: string, content: HTMLElement, _options: any): void {
+    content.replaceChildren();
   }
 
-  async _onFirstRender(_context: unknown, _options: unknown): Promise<void> {
-    (this as any).element?.style?.setProperty('display', 'none');
-    await _DialogV2.prompt({
+  protected _onRender(_context: any, _options: any): void {
+    // First paint only — subsequent renders are no-ops since we close
+    // ourselves immediately after opening the DialogV2.
+    const el = this.element;
+    if (el) el.style.display = 'none';
+    void (foundry as any).applications.api.DialogV2.wait({
       window: { title: 'Support on Patreon' },
       content: '<p>Open the Patreon page in a new tab.</p>',
-      ok: {
-        label: '<i class="fab fa-patreon"></i> Visit Patreon',
-        callback: () =>
-          window.open('https://www.patreon.com/c/DormanLakely', '_blank', 'noopener,noreferrer')
-      }
-    });
-    (this as any).close();
+      buttons: [
+        {
+          action: 'ok',
+          label: '<i class="fab fa-patreon"></i> Visit Patreon',
+          default: true,
+          callback: () => {
+            window.open(
+              'https://www.patreon.com/c/DormanLakely',
+              '_blank',
+              'noopener,noreferrer'
+            );
+          }
+        }
+      ]
+    }).then(() => this.close());
   }
 }
 
-class DmGuruLink extends _ApplicationV2 {
-  static DEFAULT_OPTIONS = {
+class DmGuruLink extends foundry.applications.api.ApplicationV2 {
+  static DEFAULT_OPTIONS: foundry.applications.api.ApplicationV2Options = {
     id: 'dlc-dmguru-link',
     tag: 'div',
     window: { title: 'Dungeon Master Guru', icon: 'fas fa-dragon' },
     position: { width: 1, height: 1 }
-  } as const;
+  };
 
-  async _renderHTML(): Promise<HTMLElement> {
-    return document.createElement('div');
+  protected async _renderHTML(_context: any, _options: any): Promise<string> {
+    return '';
   }
 
-  _replaceHTML(result: HTMLElement, content: HTMLElement): void {
-    content.replaceChildren(result);
+  protected _replaceHTML(_result: string, content: HTMLElement, _options: any): void {
+    content.replaceChildren();
   }
 
-  async _onFirstRender(_context: unknown, _options: unknown): Promise<void> {
-    (this as any).element?.style?.setProperty('display', 'none');
-    await _DialogV2.prompt({
+  protected _onRender(_context: any, _options: any): void {
+    const el = this.element;
+    if (el) el.style.display = 'none';
+    void (foundry as any).applications.api.DialogV2.wait({
       window: { title: 'Dungeon Master Guru' },
       content: '<p>Open the Dungeon Master Guru site in a new tab.</p>',
-      ok: {
-        label: '<i class="fas fa-dragon"></i> Visit Dungeon Master Guru',
-        callback: () => window.open('https://dungeonmaster.guru', '_blank', 'noopener,noreferrer')
-      }
-    });
-    (this as any).close();
+      buttons: [
+        {
+          action: 'ok',
+          label: '<i class="fas fa-dragon"></i> Visit Dungeon Master Guru',
+          default: true,
+          callback: () => {
+            window.open('https://dungeonmaster.guru', '_blank', 'noopener,noreferrer');
+          }
+        }
+      ]
+    }).then(() => this.close());
   }
 }
 

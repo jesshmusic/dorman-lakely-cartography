@@ -2,6 +2,14 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import fs from 'fs';
 
+// Read the package version at build time so we can bake it into the bundle as
+// a literal string constant via Vite's `define`. This avoids importing the
+// whole package.json (which inlines the entire JSON object into the IIFE) and
+// also sidesteps Foundry's cached `game.modules.get(id).version` on hot-reload.
+const pkgVersion = JSON.parse(
+  fs.readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
+).version;
+
 /**
  * Vite plugin to increment build number on each build
  */
@@ -83,6 +91,11 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, './src')
     }
+  },
+
+  // Replace __DLC_VERSION__ in source with a literal string at build time.
+  define: {
+    __DLC_VERSION__: JSON.stringify(pkgVersion)
   },
 
   // Custom plugins
