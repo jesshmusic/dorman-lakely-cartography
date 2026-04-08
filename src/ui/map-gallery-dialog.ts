@@ -10,6 +10,11 @@ import { PatreonAuthService } from '../services/patreon-auth-service';
 import { DownloadDialog } from './download-dialog';
 import { MODULE_ID, MODULE_TITLE } from '../constants';
 
+// `__DLC_VERSION__` is replaced at build time by Vite's `define` config with
+// the current package.json `version` as a string literal. This avoids pulling
+// the whole JSON object into the IIFE bundle via `import pkg from 'package.json'`.
+declare const __DLC_VERSION__: string;
+
 export class MapGalleryDialog extends foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.api.ApplicationV2
 ) {
@@ -94,7 +99,13 @@ export class MapGalleryDialog extends foundry.applications.api.HandlebarsApplica
       maps: filteredMaps,
       selectedMap: this.selectedMap,
       searchQuery: this.searchQuery,
-      hasSelection: this.selectedMap !== null
+      hasSelection: this.selectedMap !== null,
+      // Version baked in at build time via Vite's `define` replacement so
+      // the footer always matches what was last built (unlike a live read
+      // from `game.modules.get(...).version`, which Foundry caches at world
+      // startup and doesn't refresh on dist hot-reload).
+      version: __DLC_VERSION__,
+      moduleId: MODULE_ID
     };
   }
 
