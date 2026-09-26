@@ -772,6 +772,21 @@
   margin-bottom: 1rem;
 }
 
+.dlc-download-failed {
+  text-align: center;
+  padding: 2rem;
+}
+
+.dlc-download-failed i {
+  font-size: 4rem;
+  color: var(--dlc-error);
+  margin-bottom: 1rem;
+}
+
+.dlc-download-failed .dlc-text-muted {
+  color: var(--dlc-text-muted);
+}
+
 /* File List */
 .dlc-file-list h4 {
   margin: 0 0 1rem 0;

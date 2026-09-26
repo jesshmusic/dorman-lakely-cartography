@@ -6,7 +6,7 @@
 import { DLCAPIConfig } from './types/module';
 import { MapGalleryDialog } from './ui/map-gallery-dialog';
 import { MODULE_ID, MODULE_TITLE, LOG_PREFIX } from './constants';
-import { SceneExporter } from './services/scene-exporter';
+import { registerSceneExportContextMenu } from './ui/scene-context-menu';
 
 /**
  * Compare an installed dependency's declared Foundry compatibility against
@@ -441,52 +441,8 @@ Hooks.on('renderSceneDirectory', (_app: any, html: HTMLElement | JQuery) => {
 });
 
 /**
- * Add context menu option to scenes for exporting
- * Foundry v13 uses _getEntryContextOptions method instead of hooks
+ * Add "Export for Dorman Lakely Cartography" to the Scene Directory context menu
  */
 Hooks.once('init', () => {
-  // Wrap the SceneDirectory prototype method
-  const SceneDirectory = CONFIG.ui.scenes;
-  const originalGetEntryContextOptions = SceneDirectory.prototype._getEntryContextOptions;
-
-  SceneDirectory.prototype._getEntryContextOptions = function () {
-    const options = originalGetEntryContextOptions.call(this);
-
-    // Only add for GMs
-    if (!game.user?.isGM) {
-      return options;
-    }
-
-    // Check if JSZip is available
-    if (!SceneExporter.isAvailable()) {
-      return options;
-    }
-
-    // Add our export option
-    options.push({
-      name: 'Export for Dorman Lakely Cartography',
-      icon: '<i class="fas fa-file-archive"></i>',
-      condition: (li: any) => {
-        // Only show for scenes (not folders)
-        // In v13, li has data-entry-id attribute
-        const sceneId = li.dataset?.entryId || li.getAttribute?.('data-entry-id');
-        return !!sceneId;
-      },
-      callback: async (li: any) => {
-        // Get the scene ID from data-entry-id
-        const sceneId = li.dataset?.entryId || li.getAttribute?.('data-entry-id');
-        const scene = game.scenes.get(sceneId);
-
-        if (!scene) {
-          ui.notifications?.error('Scene not found');
-          return;
-        }
-
-        console.log(`${LOG_PREFIX} | Starting export for scene: ${scene.name}`);
-        await SceneExporter.exportScene(scene);
-      }
-    });
-
-    return options;
-  };
+  registerSceneExportContextMenu(CONFIG.ui.scenes);
 });

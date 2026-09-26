@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-09-26
+
+### Fixed
+
+- **Downloaded scenes now keep their map image on Foundry v14.** v14 moved scene backgrounds, foregrounds and fog overlays onto embedded Levels. The importer now remaps asset paths inside `levels[]` as well as the legacy top-level fields, and imports scene.json through `Scene.fromImport()`. That runs core's server-side v13→v14 migration, which plain `Scene.create()` skips; before this, the legacy `background` was pruned before core's own `_preCreate` fallback could see it. If core migration fails, the module applies its own ports of the key migrations.
+- **Tiles from v13 map packages no longer land offset by half their size.** v14 positions tiles at their texture anchor, where v13 used the top-left corner. This is handled by core migration, with a fallback port of `Tile.migratePosition` that mirrors core's handling of rotated tiles. Tile occlusion modes, rotated region rectangles and fog exploration mode are migrated too.
+- **Scene export includes v14 level images.** The exporter collects and rewrites level background, foreground and fog paths, so v14 exports no longer leave out the map image.
+- The Scene Directory "Export for Dorman Lakely Cartography" entry uses the v14 `label`/`visible`/`onClick` context menu keys; the deprecated `name`/`condition`/`callback` keys are gone.
+- The download dialog no longer reports success when scene creation fails. Import errors propagate, and the dialog shows a failure state with a Close button. A cancelled download no longer attempts an import.
+- Download progress counts now come from the download manager's stats. The file total no longer drops in-flight files, and the final count includes the last file and any files that were skipped because they already existed.
+
 ## [1.1.2] - 2026-04-08
 
 ### Added
