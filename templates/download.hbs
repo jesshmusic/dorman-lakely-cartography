@@ -28,6 +28,14 @@
           {{/if}}
         </p>
       </div>
+    {{else if error}}
+      <!-- Failure Status -->
+      <div class="dlc-download-failed">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Import Failed</h3>
+        <p>{{error}}</p>
+        <p class="dlc-text-muted">Check the browser console for details.</p>
+      </div>
     {{else}}
       <!-- Download Progress -->
       <div class="dlc-download-progress">
@@ -58,6 +66,10 @@
     {{#if completed}}
       <button type="button" data-action="close" class="dlc-btn dlc-btn-primary">
         <i class="fas fa-check"></i> Close
+      </button>
+    {{else if error}}
+      <button type="button" data-action="close" class="dlc-btn">
+        <i class="fas fa-times"></i> Close
       </button>
     {{else if downloading}}
       <button type="button" data-action="cancelDownload" class="dlc-btn dlc-btn-danger">

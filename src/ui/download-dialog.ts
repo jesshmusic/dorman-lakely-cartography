@@ -8,6 +8,8 @@ import { DLCMap, DLCFile, DownloadStatus } from '../types/module';
 import { APIService } from '../services/api-service';
 import { FileUploadService } from '../services/file-upload-service';
 import { ConcurrentDownloadManager } from '../services/concurrent-download-manager';
+import { resolveRemappedPath } from '../services/scene-data-paths';
+import { importScenePackageData } from '../services/scene-importer';
 import { MODULE_ID, MODULE_TITLE } from '../constants';
 
 export class DownloadDialog extends foundry.applications.api.HandlebarsApplicationMixin(
@@ -20,6 +22,8 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
   private files: DLCFile[] = [];
   private downloading: boolean = false;
   private completed: boolean = false;
+  private cancelled: boolean = false;
+  private errorMessage: string | null = null;
   private sceneJsonBlob: Blob | null = null;
   private remappedPaths: Map<string, string> = new Map();
   private progress: {
@@ -79,6 +83,7 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
       map: this.map,
       downloading: this.downloading,
       completed: this.completed,
+      error: this.errorMessage,
       progress: this.progress,
       files: this.files,
       downloadPath,
@@ -88,7 +93,7 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
 
   override async _onRender(_context: any, _options: any): Promise<void> {
     // Auto-load file manifest and start download when dialog opens
-    if (this.files.length === 0 && !this.downloading && !this.completed) {
+    if (this.files.length === 0 && !this.downloading && !this.completed && !this.errorMessage) {
       await this.loadFileManifest();
 
       // Auto-start download after loading files
@@ -219,8 +224,13 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
                 `${MODULE_TITLE} | ✓ Stored scene.json blob in memory (${blob.size} bytes)`
               );
             }
+
+            // onProgress only fires when a file starts, so refresh counts on completion too
+            this.syncProgress();
+            this.render(false);
           },
           onComplete: results => {
+            this.syncProgress(null);
             this.onDownloadComplete(results);
           }
         }
@@ -235,12 +245,26 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
       );
     } catch (error) {
       console.error(`${MODULE_TITLE} | Download error:`, error);
-      ui.notifications.error(
-        error instanceof Error ? error.message : 'Download failed. Please try again.'
-      );
+      const message = error instanceof Error ? error.message : 'Download failed. Please try again.';
+      ui.notifications.error(message);
       this.downloading = false;
+      this.errorMessage = message;
       this.render(false);
     }
+  }
+
+  /**
+   * Refresh displayed progress from the download manager's authoritative stats
+   */
+  private syncProgress(currentFile: string | null = this.progress.currentFile): void {
+    if (!this.downloadManager) return;
+    const stats = this.downloadManager.getStats();
+    this.progress = {
+      totalFiles: stats.totalFiles,
+      completedFiles: stats.completedFiles,
+      failedFiles: stats.failedFiles,
+      currentFile
+    };
   }
 
   /**
@@ -308,6 +332,13 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
   private async onDownloadComplete(results: any[]): Promise<void> {
     this.downloading = false;
 
+    // A cancelled download still resolves with partial results; don't import those
+    if (this.cancelled) {
+      console.log(`${MODULE_TITLE} | Download cancelled, skipping scene import`);
+      this.render(false);
+      return;
+    }
+
     const successCount = results.filter(r => r.status === DownloadStatus.Completed).length;
     const failCount = results.filter(r => r.status === DownloadStatus.Error).length;
 
@@ -324,14 +355,16 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
         this.completed = true;
       } catch (error) {
         console.error(`${MODULE_TITLE} | Scene import failed:`, error);
-        ui.notifications.error(
-          'Files downloaded but scene import failed. Check console for details.'
-        );
+        if (error instanceof Error && error.stack) {
+          console.error(`${MODULE_TITLE} | Error stack:`, error.stack);
+        }
+        const reason = error instanceof Error ? error.message : 'Unknown error';
+        this.errorMessage = `Files downloaded but scene import failed: ${reason}`;
+        ui.notifications.error(`${this.errorMessage}. Check console for details.`);
       }
     } else {
-      ui.notifications.error(
-        `Download failed: ${successCount} succeeded, ${failCount} failed. Check console for details.`
-      );
+      this.errorMessage = `Download failed: ${successCount} succeeded, ${failCount} failed.`;
+      ui.notifications.error(`${this.errorMessage} Check console for details.`);
       console.error(
         `${MODULE_TITLE} | Failed files:`,
         results.filter(r => r.status === DownloadStatus.Error)
@@ -347,243 +380,90 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
   }
 
   /**
-   * Import scene.json to create the scene in Foundry
+   * Import scene.json to create the scene in Foundry.
+   * Throws on failure so the dialog doesn't report a completed import.
    */
   private async importScene(results: any[]): Promise<void> {
-    try {
-      console.log(`${MODULE_TITLE} | Starting scene import, checking ${results.length} files`);
+    console.log(`${MODULE_TITLE} | Starting scene import, checking ${results.length} files`);
+    console.log(
+      `${MODULE_TITLE} | Results:`,
+      results.map(r => ({ path: r.file.path, status: r.status }))
+    );
+
+    if (!this.sceneJsonBlob) {
+      throw new Error('No scene.json found in package');
+    }
+
+    console.log(
+      `${MODULE_TITLE} | Using scene.json blob from memory (${this.sceneJsonBlob.size} bytes)`
+    );
+
+    const sceneData = JSON.parse(await this.sceneJsonBlob.text());
+    console.log(`${MODULE_TITLE} | Parsed scene data:`, {
+      name: sceneData.name,
+      width: sceneData.width,
+      height: sceneData.height,
+      coreVersion: sceneData._stats?.coreVersion ?? null
+    });
+
+    // Check if scene already exists and find unique name
+    const originalName = sceneData.name;
+    let uniqueName = originalName;
+    let counter = 1;
+
+    while (game.scenes.getName(uniqueName)) {
+      uniqueName = `${originalName} (${counter})`;
+      counter++;
+    }
+
+    if (uniqueName !== originalName) {
       console.log(
-        `${MODULE_TITLE} | Results:`,
-        results.map(r => ({ path: r.file.path, status: r.status }))
+        `${MODULE_TITLE} | Scene "${originalName}" already exists, using name: "${uniqueName}"`
       );
-
-      // Check if we have the scene.json blob
-      if (!this.sceneJsonBlob) {
-        console.warn(`${MODULE_TITLE} | No scene.json blob found in memory`);
-        ui.notifications.warn('No scene.json found in package. Scene not imported.');
-        return;
-      }
-
-      console.log(
-        `${MODULE_TITLE} | Using scene.json blob from memory (${this.sceneJsonBlob.size} bytes)`
-      );
-
-      // Parse the scene.json blob
-      const sceneText = await this.sceneJsonBlob.text();
-      const sceneData = JSON.parse(sceneText);
-      console.log(`${MODULE_TITLE} | Parsed scene data:`, {
-        name: sceneData.name,
-        width: sceneData.width,
-        height: sceneData.height
-      });
-
-      // Check if scene already exists and find unique name
-      const originalName = sceneData.name;
-      let uniqueName = originalName;
-      let counter = 1;
-
-      while (game.scenes.getName(uniqueName)) {
-        uniqueName = `${originalName} (${counter})`;
-        counter++;
-      }
-
-      if (uniqueName !== originalName) {
-        console.log(
-          `${MODULE_TITLE} | Scene "${originalName}" already exists, using name: "${uniqueName}"`
-        );
-        sceneData.name = uniqueName;
-      }
-
-      // Update all asset paths in the scene data to match new folder structure
-      console.log(`${MODULE_TITLE} | Updating asset paths in scene data...`);
-      this.updateScenePaths(sceneData);
-
-      // Log final scene data for debugging
-      console.log(`${MODULE_TITLE} | Final scene data before creation:`, {
-        name: sceneData.name,
-        background: sceneData.background?.src,
-        tiles: sceneData.tiles?.length || 0,
-        tokens: sceneData.tokens?.length || 0,
-        sounds: sceneData.sounds?.length || 0
-      });
-
-      // Create the scene. Use the document class lookup so this keeps working
-      // if v14 (or later) drops the bare `Scene` global in favour of namespaced
-      // foundry.documents.Scene. NOTE: the final fallback uses
-      // `(globalThis as any).Scene`, NOT a bare `Scene` reference — a bare
-      // identifier throws ReferenceError before the `??` can fall through if
-      // the global has been removed entirely. Property access on `globalThis`
-      // returns `undefined` instead of throwing.
-      console.log(`${MODULE_TITLE} | Creating scene: ${sceneData.name}`);
-      const SceneClass =
-        (globalThis as any).getDocumentClass?.('Scene') ??
-        (foundry as any).documents?.Scene ??
-        (globalThis as any).Scene;
-      const scene = await SceneClass.create(sceneData);
-
-      if (scene) {
-        ui.notifications.info(`Scene "${sceneData.name}" imported successfully!`);
-        console.log(`${MODULE_TITLE} | Scene created successfully:`, scene.id, scene.name);
-
-        // Log the actual paths Foundry is using
-        console.log(`${MODULE_TITLE} | Scene background path:`, scene.background?.src);
-
-        // Generate thumbnail for the scene
-        try {
-          console.log(`${MODULE_TITLE} | Generating thumbnail for scene...`);
-          const thumbData = await scene.createThumbnail();
-          if (thumbData?.thumb) {
-            await scene.update({ thumb: thumbData.thumb });
-            console.log(`${MODULE_TITLE} | ✓ Thumbnail generated successfully`);
-          }
-        } catch (thumbError) {
-          console.warn(`${MODULE_TITLE} | Failed to generate thumbnail:`, thumbError);
-          // Non-fatal error, scene was still created
-        }
-      }
-    } catch (error) {
-      console.error(`${MODULE_TITLE} | Error importing scene:`, error);
-      if (error instanceof Error) {
-        console.error(`${MODULE_TITLE} | Error stack:`, error.stack);
-      }
-      ui.notifications.error(
-        `Failed to import scene: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
-  }
-
-  /**
-   * Helper to find remapped path with encoding fallbacks
-   */
-  private findRemappedPath(originalPath: string): string | null {
-    // Try exact match first
-    if (this.remappedPaths.has(originalPath)) {
-      return this.remappedPaths.get(originalPath) || null;
+      sceneData.name = uniqueName;
     }
 
-    // Try URL-decoded version
+    console.log(
+      `${MODULE_TITLE} | Available remapped paths:`,
+      Array.from(this.remappedPaths.entries())
+    );
+
+    // Resolve the Scene class through the document class lookup. The final
+    // fallback uses `(globalThis as any).Scene`, NOT a bare `Scene` reference:
+    // a bare identifier throws ReferenceError if the global has been removed.
+    const SceneClass =
+      (globalThis as any).getDocumentClass?.('Scene') ??
+      (foundry as any).documents?.Scene ??
+      (globalThis as any).Scene;
+
+    // Remaps asset paths (legacy and v14 levels), migrates v13 data, creates the scene
+    const { scene, backgroundSrc } = await importScenePackageData(sceneData, {
+      SceneClass,
+      resolvePath: path => resolveRemappedPath(this.remappedPaths, path)
+    });
+
+    ui.notifications.info(`Scene "${scene.name}" imported successfully!`);
+    console.log(`${MODULE_TITLE} | Scene created successfully:`, scene.id, scene.name);
+
+    const createdBackground = scene.initialLevel?.background?.src ?? null;
+    console.log(`${MODULE_TITLE} | Scene background path:`, createdBackground);
+    if (!createdBackground) {
+      ui.notifications.warn(
+        `Scene "${scene.name}" was imported without a map image${backgroundSrc ? '' : ' (none found in scene.json)'}. Check console for details.`
+      );
+    }
+
+    // Generate thumbnail for the scene
     try {
-      const decoded = decodeURIComponent(originalPath);
-      if (this.remappedPaths.has(decoded)) {
-        return this.remappedPaths.get(decoded) || null;
+      console.log(`${MODULE_TITLE} | Generating thumbnail for scene...`);
+      const thumbData = await scene.createThumbnail();
+      if (thumbData?.thumb) {
+        await scene.update({ thumb: thumbData.thumb });
+        console.log(`${MODULE_TITLE} | ✓ Thumbnail generated successfully`);
       }
-    } catch {
-      // Ignore decode errors
-    }
-
-    // Try URL-encoded version
-    try {
-      const encoded = encodeURIComponent(originalPath);
-      if (this.remappedPaths.has(encoded)) {
-        return this.remappedPaths.get(encoded) || null;
-      }
-    } catch {
-      // Ignore encode errors
-    }
-
-    return null;
-  }
-
-  /**
-   * Update all asset paths in scene data to match new folder structure
-   */
-  private updateScenePaths(sceneData: any): void {
-    try {
-      console.log(`${MODULE_TITLE} | Updating paths in scene data...`);
-      console.log(
-        `${MODULE_TITLE} | Available remapped paths:`,
-        Array.from(this.remappedPaths.entries())
-      );
-
-      // Update background image
-      try {
-        if (sceneData.background?.src) {
-          const originalPath = sceneData.background.src;
-          console.log(`${MODULE_TITLE} | Looking up background path: "${originalPath}"`);
-
-          const newPath = this.findRemappedPath(originalPath);
-          if (newPath) {
-            console.log(`${MODULE_TITLE} | ✓ Background updated: ${originalPath} -> ${newPath}`);
-            sceneData.background.src = newPath;
-          } else {
-            console.warn(`${MODULE_TITLE} | ✗ No mapping found for background: "${originalPath}"`);
-            console.warn(
-              `${MODULE_TITLE} | Available keys:`,
-              Array.from(this.remappedPaths.keys())
-            );
-          }
-        }
-      } catch (error) {
-        console.warn(`${MODULE_TITLE} | Failed to update background path:`, error);
-      }
-
-      // Update tiles
-      try {
-        if (sceneData.tiles && Array.isArray(sceneData.tiles)) {
-          for (const tile of sceneData.tiles) {
-            try {
-              if (tile.texture?.src) {
-                const newPath = this.findRemappedPath(tile.texture.src);
-                if (newPath) {
-                  console.log(`${MODULE_TITLE} | Tile: ${tile.texture.src} -> ${newPath}`);
-                  tile.texture.src = newPath;
-                }
-              }
-            } catch (error) {
-              console.warn(`${MODULE_TITLE} | Failed to update tile path:`, error);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`${MODULE_TITLE} | Failed to process tiles:`, error);
-      }
-
-      // Update tokens
-      try {
-        if (sceneData.tokens && Array.isArray(sceneData.tokens)) {
-          for (const token of sceneData.tokens) {
-            try {
-              if (token.texture?.src) {
-                const newPath = this.findRemappedPath(token.texture.src);
-                if (newPath) {
-                  console.log(`${MODULE_TITLE} | Token: ${token.texture.src} -> ${newPath}`);
-                  token.texture.src = newPath;
-                }
-              }
-            } catch (error) {
-              console.warn(`${MODULE_TITLE} | Failed to update token path:`, error);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`${MODULE_TITLE} | Failed to process tokens:`, error);
-      }
-
-      // Update sounds/audio
-      try {
-        if (sceneData.sounds && Array.isArray(sceneData.sounds)) {
-          for (const sound of sceneData.sounds) {
-            try {
-              if (sound.path) {
-                const newPath = this.findRemappedPath(sound.path);
-                if (newPath) {
-                  console.log(`${MODULE_TITLE} | Sound: ${sound.path} -> ${newPath}`);
-                  sound.path = newPath;
-                }
-              }
-            } catch (error) {
-              console.warn(`${MODULE_TITLE} | Failed to update sound path:`, error);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`${MODULE_TITLE} | Failed to process sounds:`, error);
-      }
-
-      console.log(`${MODULE_TITLE} | ✓ Path updates complete`);
-    } catch (error) {
-      console.error(`${MODULE_TITLE} | Error updating scene paths:`, error);
-      throw error;
+    } catch (thumbError) {
+      // Non-fatal, the scene was still created
+      console.warn(`${MODULE_TITLE} | Failed to generate thumbnail:`, thumbError);
     }
   }
 
@@ -591,6 +471,7 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
    * Cancel download
    */
   private _onCancelDownload(_event: Event, _target: HTMLElement): void {
+    this.cancelled = true;
     if (this.downloadManager) {
       this.downloadManager.abort();
       ui.notifications.info('Download cancelled.');
@@ -610,6 +491,7 @@ export class DownloadDialog extends foundry.applications.api.HandlebarsApplicati
   override async close(options?: any): Promise<void> {
     // Abort any active downloads
     if (this.downloading && this.downloadManager) {
+      this.cancelled = true;
       this.downloadManager.abort();
     }
 

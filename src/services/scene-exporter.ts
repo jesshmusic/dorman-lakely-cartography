@@ -1,5 +1,6 @@
 import { LOG_PREFIX } from '../constants';
 import JSZip from 'jszip';
+import { visitScenePaths } from './scene-data-paths';
 
 /**
  * Scene Exporter Service
@@ -23,39 +24,11 @@ export class SceneExporter {
       // Get scene data (will update paths later)
       const sceneData = scene.toJSON();
 
-      // Collect all asset URLs from scene
-      const assets = new Set<string>();
+      // Collect all asset URLs from the serialized scene. Reading toJSON()
+      // output (not the live document) covers v14 level backgrounds,
+      // foregrounds and fog overlays as well as legacy top-level fields.
       const pathMapping = new Map<string, string>(); // original -> new path with underscores
-
-      // Background
-      if (scene.background?.src) {
-        assets.add(scene.background.src);
-        console.log(`${LOG_PREFIX} | Found background: ${scene.background.src}`);
-      }
-
-      // Tiles
-      scene.tiles.forEach((tile: any) => {
-        if (tile.texture?.src) {
-          assets.add(tile.texture.src);
-        }
-      });
-      console.log(`${LOG_PREFIX} | Found ${scene.tiles.size} tiles`);
-
-      // Tokens
-      scene.tokens.forEach((token: any) => {
-        if (token.texture?.src) {
-          assets.add(token.texture.src);
-        }
-      });
-      console.log(`${LOG_PREFIX} | Found ${scene.tokens.size} tokens`);
-
-      // Sounds
-      scene.sounds.forEach((sound: any) => {
-        if (sound.path) {
-          assets.add(sound.path);
-        }
-      });
-      console.log(`${LOG_PREFIX} | Found ${scene.sounds.size} sounds`);
+      const assets = SceneExporter.collectAssets(sceneData);
 
       console.log(`${LOG_PREFIX} | Total assets to download: ${assets.size}`);
 
@@ -165,44 +138,34 @@ export class SceneExporter {
   }
 
   /**
+   * Collect every asset path referenced by serialized scene data, logging a
+   * per-kind summary.
+   */
+  static collectAssets(sceneData: any): Set<string> {
+    const assets = new Set<string>();
+    const counts: Record<string, number> = {};
+    visitScenePaths(sceneData, (path, location) => {
+      assets.add(path);
+      const kind = location.replace(/\[\d+\]/, '[]');
+      counts[kind] = (counts[kind] ?? 0) + 1;
+    });
+    for (const [kind, count] of Object.entries(counts)) {
+      console.log(`${LOG_PREFIX} | Found ${count} x ${kind}`);
+    }
+    return assets;
+  }
+
+  /**
    * Update all asset paths in scene data to use clean filenames
    */
-  private static updateSceneDataPaths(sceneData: any, pathMapping: Map<string, string>): void {
-    // Update background
-    if (sceneData.background?.src && pathMapping.has(sceneData.background.src)) {
-      sceneData.background.src = pathMapping.get(sceneData.background.src);
-      console.log(`${LOG_PREFIX} | Updated background path`);
-    }
-
-    // Update tiles
-    if (sceneData.tiles && Array.isArray(sceneData.tiles)) {
-      for (const tile of sceneData.tiles) {
-        if (tile.texture?.src && pathMapping.has(tile.texture.src)) {
-          tile.texture.src = pathMapping.get(tile.texture.src);
-        }
-      }
-      console.log(`${LOG_PREFIX} | Updated ${sceneData.tiles.length} tile paths`);
-    }
-
-    // Update tokens
-    if (sceneData.tokens && Array.isArray(sceneData.tokens)) {
-      for (const token of sceneData.tokens) {
-        if (token.texture?.src && pathMapping.has(token.texture.src)) {
-          token.texture.src = pathMapping.get(token.texture.src);
-        }
-      }
-      console.log(`${LOG_PREFIX} | Updated ${sceneData.tokens.length} token paths`);
-    }
-
-    // Update sounds
-    if (sceneData.sounds && Array.isArray(sceneData.sounds)) {
-      for (const sound of sceneData.sounds) {
-        if (sound.path && pathMapping.has(sound.path)) {
-          sound.path = pathMapping.get(sound.path);
-        }
-      }
-      console.log(`${LOG_PREFIX} | Updated ${sceneData.sounds.length} sound paths`);
-    }
+  static updateSceneDataPaths(sceneData: any, pathMapping: Map<string, string>): void {
+    let updated = 0;
+    visitScenePaths(sceneData, path => {
+      const newPath = pathMapping.get(path);
+      if (newPath) updated++;
+      return newPath;
+    });
+    console.log(`${LOG_PREFIX} | Updated ${updated} asset paths`);
   }
 
   /**

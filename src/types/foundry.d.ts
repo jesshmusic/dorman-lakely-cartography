@@ -38,7 +38,7 @@ declare global {
     id: string;
     name: string;
     img: string | null;
-    createThumbnail(): Promise<void>;
+    createThumbnail(options?: any): Promise<any>;
     [key: string]: any;
   }
 
@@ -51,6 +51,7 @@ declare global {
     info(message: string): void;
     warn(message: string): void;
     error(message: string): void;
+    success(message: string): void;
     notify(message: string, type?: string): void;
   }
 
@@ -97,6 +98,7 @@ declare global {
 
   interface Collection<T> {
     get(id: string): T | undefined;
+    getName(name: string): T | undefined;
     set(id: string, value: T): void;
     has(id: string): boolean;
     find(predicate: (value: T) => boolean): T | undefined;
@@ -171,6 +173,11 @@ declare global {
   }
 
   function renderTemplate(path: string, data: any): Promise<string>;
+
+  /** Foundry adds String.prototype.slugify */
+  interface String {
+    slugify(options?: { replacement?: string; strict?: boolean; lowercase?: boolean }): string;
+  }
 }
 
 export {};

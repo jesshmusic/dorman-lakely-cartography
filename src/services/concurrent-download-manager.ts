@@ -38,6 +38,7 @@ export class ConcurrentDownloadManager {
   private queue: DownloadQueueItem[] = [];
   private activeDownloads: Set<Promise<void>> = new Set();
   private results: DownloadResult[] = [];
+  private totalFiles: number = 0;
   private aborted: boolean = false;
 
   constructor(
@@ -64,6 +65,7 @@ export class ConcurrentDownloadManager {
     this.queue = [];
     this.activeDownloads.clear();
     this.results = [];
+    this.totalFiles = files.length;
     this.aborted = false;
 
     // Build download queue
@@ -162,6 +164,7 @@ export class ConcurrentDownloadManager {
         );
         item.status = DownloadStatus.Completed;
         this.recordResult(file, DownloadStatus.Completed);
+        this.callbacks.onFileComplete?.(file, DownloadStatus.Completed, undefined);
         return;
       }
 
@@ -220,7 +223,8 @@ export class ConcurrentDownloadManager {
 
     const completedFiles = this.results.filter(r => r.status === DownloadStatus.Completed).length;
     const failedFiles = this.results.filter(r => r.status === DownloadStatus.Error).length;
-    const totalFiles = this.queue.length + this.results.length;
+    // Fixed at process() start; queue + results would miss in-flight files
+    const totalFiles = this.totalFiles;
 
     // Calculate bytes (if available from file metadata)
     const totalBytes = this.results.reduce((sum, r) => sum + (r.file.size || 0), 0);
@@ -253,7 +257,8 @@ export class ConcurrentDownloadManager {
   getStats(): DownloadProgress {
     const completedFiles = this.results.filter(r => r.status === DownloadStatus.Completed).length;
     const failedFiles = this.results.filter(r => r.status === DownloadStatus.Error).length;
-    const totalFiles = this.queue.length + this.results.length;
+    // Fixed at process() start; queue + results would miss in-flight files
+    const totalFiles = this.totalFiles;
 
     const totalBytes = this.results.reduce((sum, r) => sum + (r.file.size || 0), 0);
     const bytesDownloaded = this.results
